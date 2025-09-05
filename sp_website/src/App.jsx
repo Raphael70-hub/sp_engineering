@@ -20,6 +20,8 @@ import AdminProducts from "./pages/AdminProducts.jsx";
 import AdminOrders from "./pages/AdminOrders.jsx";
 import AdminOrderDetail from "./pages/AdminOrderDetail.jsx";
 import AdminProductDetail from "./pages/AdminProductDetail.jsx";
+import AdminUsers from "./pages/AdminUsers.jsx";
+import AdminPayments from "./pages/AdminPayments.jsx";
 
 function App() {
 
@@ -45,6 +47,8 @@ function App() {
           <Route path="/admin/products/:productId" element={<AdminProductDetail />} />
           <Route path="/admin/orders" element={<AdminOrders />} />
           <Route path="/admin/orders/:orderId" element={<AdminOrderDetail />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/payments" element={<AdminPayments />} />
       </Routes>
   )
 }

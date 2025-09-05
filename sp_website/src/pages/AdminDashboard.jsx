@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
     BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Legend
 } from "recharts";
@@ -51,7 +50,7 @@ export default function AdminDashboard() {
 
 
     return (
-        <div className="flex min-h-screen bg-gray-100">
+        <div className="flex min-h-screen bg-gray-100 min-w-screen overflow-y-hidden">
             <Sidebar />
 
             {/* Main Content */}

@@ -26,12 +26,14 @@ export default function AdminOrders() {
                 { name: "Iron Rods", qty: 10 },
             ],
             status: "Pending",
+            date: "2025-09-01"
         },
         {
             id: 2,
             customer: "Jane Smith",
             products: [{ name: "Mixer", qty: 1 }],
             status: "Shipped",
+            date: "2025-09-02"
         },
         {
             id: 3,
@@ -43,6 +45,7 @@ export default function AdminOrders() {
                 { name: "Tiles", qty: 40 },
             ],
             status: "Delivered",
+            date: "2025-09-03"
         },
     ]);
 
@@ -53,6 +56,9 @@ export default function AdminOrders() {
     // Pagination
     const [page, setPage] = useState(1);
     const pageSize = 5;
+
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
 
     // Filter logic (by customer OR product name)
     const filteredOrders = orders.filter((o) => {
@@ -65,7 +71,12 @@ export default function AdminOrders() {
                 p.name.toLowerCase().includes(search.toLowerCase())
             );
 
-        return matchesStatus && matchesSearch;
+        const date = new Date(o.date);
+        const matchesStart = !startDate || date >= new Date(startDate);
+        const matchesEnd = !endDate || date <= new Date(endDate);
+
+
+        return matchesStatus && matchesSearch && matchesStart && matchesEnd;
     });
 
     // Pagination logic
@@ -76,12 +87,12 @@ export default function AdminOrders() {
     );
 
     return (
-        <div className="flex min-h-screen">
+        <div className="flex min-h-screen min-w-screen overflow-y-hidden">
             {/* Sidebar */}
             <Sidebar />
 
             {/* Main Content */}
-            <div className="w-full p-6">
+            <div className="w-full md:px-6 py-6">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold flex items-center space-x-2">
@@ -109,6 +120,22 @@ export default function AdminOrders() {
                         <option>Shipped</option>
                         <option>Delivered</option>
                     </select>
+
+                    {/* Date Filters */}
+                    <input
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        className="border rounded-lg px-3 py-2"
+                        placeholder="Start Date"
+                    />
+                    <input
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        className="border rounded-lg px-3 py-2"
+                        placeholder="End Date"
+                    />
                 </div>
 
                 {/* Orders Table */}
@@ -121,7 +148,8 @@ export default function AdminOrders() {
                                 <th className="p-3 text-left">Customer</th>
                                 <th className="p-3 text-left">Products</th>
                                 <th className="p-3 text-left">Status</th>
-                                <th className="p-3 text-right">Actions</th>
+                                <th className="px-6 py-3 text-left">Date</th>
+                                <th className="p-3 text-left">Actions</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -132,29 +160,30 @@ export default function AdminOrders() {
                                     <td className="p-3 text-sm text-gray-700">
                                         {o.products.slice(0, 2).map((p, i) => (
                                             <span key={i} className="mr-2">
-                            {p.qty}x {p.name}
-                          </span>
-                                        ))}
-                                        {o.products.length > 2 && (
-                                            <span className="text-gray-500">
-                            +{o.products.length - 2} more...
-                          </span>
-                                        )}
+                                                {p.qty}x {p.name}
+                                              </span>
+                                                            ))}
+                                                            {o.products.length > 2 && (
+                                                                <span className="text-gray-500">
+                                                +{o.products.length - 2} more...
+                                              </span>
+                                                            )}
+                                                        </td>
+                                                        <td className="p-3">
+                                            <span
+                                                className={`px-2 py-1 text-xs rounded-lg ${
+                                                    o.status === "Pending"
+                                                        ? "bg-yellow-100 text-yellow-700"
+                                                        : o.status === "Shipped"
+                                                            ? "bg-blue-100 text-blue-700"
+                                                            : "bg-green-100 text-green-700"
+                                                }`}
+                                            >
+                                              {o.status}
+                                            </span>
                                     </td>
-                                    <td className="p-3">
-                        <span
-                            className={`px-2 py-1 text-xs rounded-lg ${
-                                o.status === "Pending"
-                                    ? "bg-yellow-100 text-yellow-700"
-                                    : o.status === "Shipped"
-                                        ? "bg-blue-100 text-blue-700"
-                                        : "bg-green-100 text-green-700"
-                            }`}
-                        >
-                          {o.status}
-                        </span>
-                                    </td>
-                                    <td className="p-3 text-right">
+                                    <td className="px-6 py-4">{o.date}</td>
+                                    <td className="p-3 text-left">
                                         <button
                                             onClick={() => navigate(`/admin/orders/${o.id}`)}
                                             className="text-orange-600 hover:text-orange-800"

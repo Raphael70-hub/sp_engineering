@@ -88,10 +88,10 @@ export default function AdminProducts() {
 
 
     return (
-        <div className="flex min-h-screen">
+        <div className="flex min-h-screen bg-gray-100 overflow-y-hidden">
             <Sidebar />
 
-            <div className="w-full p-6">
+            <div className="w-full md:px-6 py-6">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold flex items-center space-x-2">
@@ -251,8 +251,8 @@ export default function AdminProducts() {
 
             {/* Add/Edit Product Modal */}
             {open && (
-                <div className="fixed inset-0 bg-black/30 bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-lg relative">
+                <div className="fixed inset-0 bg-black/30 bg-opacity-50 flex md:items-center justify-center z-50">
+                    <div className="bg-white rounded-xl shadow-lg p-6 md:w-1/2 w-screen  relative h-screen overflow-y-scroll">
                         {/* Close Button */}
                         <button
                             className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
@@ -292,11 +292,20 @@ function ProductForm({ product, onSave }) {
         }
     };
 
+
+    const removeDetail = (index) => {
+        setDetails(details.filter((_, i) => i !== index));
+    };
+
     const addDelivery = () => {
         if (deliveryInput.trim()) {
             setDeliveryInfo([...deliveryInfo, deliveryInput]);
             setDeliveryInput("");
         }
+    };
+
+    const removeDelivery = (index) => {
+        setDeliveryInfo(deliveryInfo.filter((_, i) => i !== index));
     };
 
     const handleSubmit = (e) => {
@@ -390,9 +399,21 @@ function ProductForm({ product, onSave }) {
                         Add
                     </button>
                 </div>
-                <ul className="mt-2 list-disc list-inside text-gray-700">
+                <ul className="mt-2 space-y-1">
                     {details.map((d, i) => (
-                        <li key={i}>{d}</li>
+                        <li
+                            key={i}
+                            className="flex items-center justify-between bg-gray-100 px-2 py-1 rounded"
+                        >
+                            <span>{d}</span>
+                            <button
+                                type="button"
+                                onClick={() => removeDetail(i)}
+                                className="text-red-600 hover:text-red-800"
+                            >
+                                ❌
+                            </button>
+                        </li>
                     ))}
                 </ul>
             </div>
@@ -416,9 +437,21 @@ function ProductForm({ product, onSave }) {
                         Add
                     </button>
                 </div>
-                <ul className="mt-2 list-disc list-inside text-gray-700">
+                <ul className="mt-2 space-y-1">
                     {deliveryInfo.map((d, i) => (
-                        <li key={i}>{d}</li>
+                        <li
+                            key={i}
+                            className="flex items-center justify-between bg-gray-100 px-2 py-1 rounded"
+                        >
+                            <span>{d}</span>
+                            <button
+                                type="button"
+                                onClick={() => removeDelivery(i)}
+                                className="text-red-600 hover:text-red-800"
+                            >
+                                ❌
+                            </button>
+                        </li>
                     ))}
                 </ul>
             </div>

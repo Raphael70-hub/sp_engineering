@@ -32,12 +32,12 @@ export default function AdminOrderDetail() {
 
     return (
         <>
-            <div className="flex min-h-screen">
+            <div className="flex min-h-screen bg-gray-100 overflow-y-hidden">
                 {/* Sidebar */}
                 <Sidebar />
 
                 {/* Main Content */}
-                <div className="flex-1 p-6">
+                <div className="flex-1 md:px-6 py-6">
                     {/* Header */}
                     <div>
                         <button

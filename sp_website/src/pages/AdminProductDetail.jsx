@@ -21,10 +21,10 @@ export default function AdminProductDetail() {
     };
 
     return (
-        <div className="flex min-h-screen bg-gray-100">
+        <div className="flex min-h-screen bg-gray-100 w-full">
             <Sidebar />
 
-            <div className="flex-1 p-8">
+            <div className="w-full flex-1 md:px-8 py-8">
                 {/* Back button */}
                 <button
                     onClick={() => navigate(-1)}
