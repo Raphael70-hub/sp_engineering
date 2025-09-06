@@ -22,6 +22,8 @@ import AdminOrderDetail from "./pages/AdminOrderDetail.jsx";
 import AdminProductDetail from "./pages/AdminProductDetail.jsx";
 import AdminUsers from "./pages/AdminUsers.jsx";
 import AdminPayments from "./pages/AdminPayments.jsx";
+import AdminCategory from "./pages/AdminCategory.jsx";
+import AdminPaymentDetail from "./pages/AdminPaymentDetail.jsx";
 
 function App() {
 
@@ -39,16 +41,18 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/orders" element={<OrderHistory />} />
-          <Route path="/orders/:orderId" element={<OrderDetail />} />
+          <Route path="/orders/:id" element={<OrderDetail />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/reviews" element={<ReviewsPage />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/products" element={<AdminProducts />} />
-          <Route path="/admin/products/:productId" element={<AdminProductDetail />} />
+          <Route path="/admin/products/:id" element={<AdminProductDetail />} />
+              <Route path="/admin/categories" element={<AdminCategory />} />
           <Route path="/admin/orders" element={<AdminOrders />} />
-          <Route path="/admin/orders/:orderId" element={<AdminOrderDetail />} />
+          <Route path="/admin/orders/:id" element={<AdminOrderDetail />} />
           <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/admin/payments" element={<AdminPayments />} />
+          <Route path="/admin/payments/:id" element={<AdminPaymentDetail />} />
       </Routes>
   )
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     Plus,
     Edit,
@@ -6,46 +6,43 @@ import {
     Upload,
     Package,
     X,
-    LayoutDashboard,
-    ShoppingCart,
-    Users,
-    CreditCard,
-    LogOut,
+    Eye,
     ChevronLeft,
     ChevronRight,
-    Eye,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import Sidebar from "../components/Sidebar.jsx";
+import ProductForm from "../components/ProductForm.jsx";
+import { API_BASE_URL } from "../constants/index.js";
 
 export default function AdminProducts() {
-    const [products, setProducts] = useState([
-        {
-            id: 1,
-            name: "Cement",
-            category: "Construction",
-            price: 15,
-            image: "",
-            details: ["50kg Bag", "Grey"],
-            deliveryInfo: ["2-3 days delivery"],
-        },
-        {
-            id: 2,
-            name: "Mixer",
-            category: "Construction",
-            price: 25,
-            image: "",
-            details: ["500L Capacity"],
-            deliveryInfo: ["5-7 days delivery"],
-        },
-    ]);
+    const [products, setProducts] = useState([]);
     const [open, setOpen] = useState(false);
     const [editing, setEditing] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [notification, setNotification] = useState("");
+    const [isErrorNotification, setIsErrorNotification] = useState(false);
 
-    const [search, setSearch] = useState("");
-    const [category, setCategory] = useState("All");
-    const [minPrice, setMinPrice] = useState("");
-    const [maxPrice, setMaxPrice] = useState("");
+    const [categories, setCategories] = useState([]);
+
+    const [filterCategory, setFilterCategory] = useState("");
+    const [filterType, setFilterType] = useState("");
+    const [filterMinPrice, setFilterMinPrice] = useState("");
+    const [filterMaxPrice, setFilterMaxPrice] = useState("");
+    const [filterSearch, setFilterSearch] = useState("");
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const res = await axios.get(`${API_BASE_URL}/api/categories`);
+                setCategories(res.data.categories || []);
+            } catch (err) {
+                console.error(err);
+            }
+        };
+        fetchCategories();
+    }, []);
 
     // Pagination
     const [page, setPage] = useState(1);
@@ -53,45 +50,135 @@ export default function AdminProducts() {
 
     const navigate = useNavigate();
 
-    // Apply filters
-    const filteredProducts = products.filter((p) => {
-        const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase());
-        const matchesCategory = category === "All" || p.category === category;
-        const matchesMin = minPrice === "" || p.price >= parseFloat(minPrice);
-        const matchesMax = maxPrice === "" || p.price <= parseFloat(maxPrice);
-        return matchesSearch && matchesCategory && matchesMin && matchesMax;
-    });
+    const fetchProducts = async () => {
+        try {
+            setLoading(true);
 
-    // Pagination logic
-    const totalPages = Math.ceil(filteredProducts.length / pageSize);
-    const paginatedProducts = filteredProducts.slice(
+            const params = {
+                page,
+                limit: pageSize,
+                category_id: filterCategory || undefined,
+                product_type: filterType || undefined,
+                min_price: filterMinPrice || undefined,
+                max_price: filterMaxPrice || undefined,
+                search: filterSearch || undefined,
+            };
+
+            const res = await axios.get(`${API_BASE_URL}/api/products`, { params });
+            setProducts(res.data.products || []);
+        } catch (err) {
+            console.error(err);
+            setIsErrorNotification(true);
+            showNotification("An error occurred. Please try again.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchProducts();
+    }, []);
+
+    useEffect(() => {
+        fetchProducts();
+    }, [page, filterCategory, filterType]);
+
+
+    const totalPages = Math.ceil(products.length / pageSize);
+    const paginatedProducts = products.slice(
         (page - 1) * pageSize,
         page * pageSize
     );
 
-    const handleSave = (product) => {
-        if (editing) {
-            setProducts(
-                products.map((p) =>
-                    p.id === editing.id ? { ...product, id: p.id } : p
-                )
-            );
-        } else {
-            setProducts([...products, { ...product, id: products.length + 1 }]);
-        }
-        setOpen(false);
-        setEditing(null);
+    const showNotification = (msg) => {
+        setNotification(msg);
+        setTimeout(() => setNotification(""), 3000);
     };
 
-    const handleDelete = (id) => setProducts(products.filter((p) => p.id !== id));
+    const handleSave = async (formData) => {
+        try {
+            setLoading(true);
+            let response;
+            if (editing) {
+                // Update product
+                response = await axios.put(
+                    `${API_BASE_URL}/api/products/${editing.id}`,
+                    formData,
+                    { headers: { "Content-Type": "multipart/form-data" } }
+                );
+                setIsErrorNotification(false);
+                const successMessage = response?.data?.message || "Product updated successfully";
+                showNotification(successMessage);
+            } else {
+                // Create product
+                response = await axios.post(`${API_BASE_URL}/api/products`, formData, {
+                    headers: { "Content-Type": "multipart/form-data" },
+                });
 
+                setIsErrorNotification(false);
+                const successMessage = response?.data?.message || "Product created successfully";
+                showNotification(successMessage);
+            }
+            setOpen(false);
+            setEditing(null);
+            fetchProducts();
+        } catch (err) {
+            console.error(err);
+            setIsErrorNotification(true);
+            const errorMessage =
+                err?.response?.data?.message ||
+                err?.response?.data?.error ||
+                "An error occurred. Please try again.";
 
+            showNotification(errorMessage);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDelete = async (id) => {
+        const confirmDelete = window.confirm(
+            "Are you sure you want to delete this product?"
+        );
+        if (!confirmDelete) return;
+        try {
+            setLoading(true);
+            let response = await axios.delete(`${API_BASE_URL}/api/products/${id}`);
+            const message = response?.data?.message ? response.data.message:"Product deleted successfully"
+            showNotification(message);
+            fetchProducts();
+        } catch (err) {
+            console.error(err);
+            setIsErrorNotification(true);
+            const errorMessage =
+                err?.response?.data?.message ||
+                err?.response?.data?.error ||
+                "An error occurred. Please try again.";
+
+            showNotification(errorMessage);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (loading)
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+        );
 
     return (
         <div className="flex min-h-screen bg-gray-100 overflow-y-hidden">
             <Sidebar />
 
-            <div className="w-full md:px-6 py-6">
+            <div className="w-full md:px-6 py-6 relative">
+                {notification && (
+                    <div className={`absolute top-4 left-1/2 z-100 -translate-x-1/2 ${isErrorNotification ? 'bg-red-500' : 'bg-green-500' } text-white px-4 py-2 rounded shadow`}>
+                        {notification}
+                    </div>
+                )}
+
                 {/* Header */}
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold flex items-center space-x-2">
@@ -108,42 +195,96 @@ export default function AdminProducts() {
                 </div>
 
                 {/* Filters */}
-                <div className="bg-white shadow-md rounded-lg p-4 mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <input
-                        type="text"
-                        placeholder="Search by name..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="border rounded-lg p-2 w-full"
-                    />
+                <div className="flex flex-wrap gap-4 mb-4 items-end bg-white shadow p-6 rounded-lg">
+                    <div>
+                        <label className="block text-sm font-medium">Search</label>
+                        <input
+                            type="text"
+                            value={filterSearch}
+                            onChange={(e) => setFilterSearch(e.target.value)}
+                            placeholder="Search products..."
+                            className="border rounded-lg p-2 shadow-sm focus:ring focus:ring-orange-300 w-40"
+                        />
+                    </div>
 
-                    <select
-                        value={category}
-                        onChange={(e) => setCategory(e.target.value)}
-                        className="border rounded-lg p-2 w-full"
+                    <div>
+                        <label className="block text-sm font-medium">Category</label>
+                        <select
+                            value={filterCategory}
+                            onChange={(e) => setFilterCategory(e.target.value)}
+                            className="border rounded-lg p-2 shadow-sm focus:ring focus:ring-orange-300 w-40"
+                        >
+                            <option value="">All Categories</option>
+                            {categories.map((cat) => (
+                                <option key={cat.id} value={cat.id}>
+                                    {cat.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium">Type</label>
+                        <select
+                            value={filterType}
+                            onChange={(e) => setFilterType(e.target.value)}
+                            className="border rounded-lg p-2 shadow-sm focus:ring focus:ring-orange-300 w-40"
+                        >
+                            <option value="">All Types</option>
+                            <option value="product">Product</option>
+                            <option value="rental">Rental</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium">Min Price</label>
+                        <input
+                            type="number"
+                            value={filterMinPrice}
+                            onChange={(e) => setFilterMinPrice(e.target.value)}
+                            placeholder="₦0"
+                            className="border rounded-lg p-2 shadow-sm focus:ring focus:ring-orange-300 w-24"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium">Max Price</label>
+                        <input
+                            type="number"
+                            value={filterMaxPrice}
+                            onChange={(e) => setFilterMaxPrice(e.target.value)}
+                            placeholder="₦99999"
+                            className="border rounded-lg p-2 shadow-sm focus:ring focus:ring-orange-300 w-24"
+                        />
+                    </div>
+
+                    <button
+                        onClick={() => {
+                            setPage(1);
+                            fetchProducts();
+                        }}
+                        className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg"
                     >
-                        <option value="All">All Categories</option>
-                        <option value="Electronics">Electronics</option>
-                        <option value="Fashion">Fashion</option>
-                        <option value="Appliances">Appliances</option>
-                    </select>
+                        Apply Filters
+                    </button>
 
-                    <input
-                        type="number"
-                        placeholder="Min Price"
-                        value={minPrice}
-                        onChange={(e) => setMinPrice(e.target.value)}
-                        className="border rounded-lg p-2 w-full"
-                    />
-
-                    <input
-                        type="number"
-                        placeholder="Max Price"
-                        value={maxPrice}
-                        onChange={(e) => setMaxPrice(e.target.value)}
-                        className="border rounded-lg p-2 w-full"
-                    />
+                    <button
+                        onClick={() => {
+                            setFilterCategory("");
+                            setFilterType("");
+                            setFilterMinPrice("");
+                            setFilterMaxPrice("");
+                            setFilterSearch("");
+                            setPage(1);
+                            fetchProducts();
+                        }}
+                        className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg"
+                    >
+                        Reset
+                    </button>
                 </div>
+
+
 
                 {/* Products Table */}
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden">
@@ -153,10 +294,11 @@ export default function AdminProducts() {
                             <tr>
                                 <th className="p-3 text-left">Image</th>
                                 <th className="p-3 text-left">Name</th>
+                                <th className="p-3 text-left">Type</th>
                                 <th className="p-3 text-left">Category</th>
                                 <th className="p-3 text-left">Price</th>
+                                <th className="p-3 text-left">Stock</th>
                                 <th className="p-3 text-left">Details</th>
-                                <th className="p-3 text-left">Delivery Info</th>
                                 <th className="p-3 text-right">Actions</th>
                             </tr>
                             </thead>
@@ -164,9 +306,9 @@ export default function AdminProducts() {
                             {paginatedProducts.map((p) => (
                                 <tr key={p.id} className="border-b hover:bg-gray-50">
                                     <td className="p-3">
-                                        {p.image ? (
+                                        {p.image_url ? (
                                             <img
-                                                src={p.image}
+                                                src={`${API_BASE_URL}${p.image_url}`}
                                                 alt={p.name}
                                                 className="w-12 h-12 object-cover rounded-lg"
                                             />
@@ -177,21 +319,18 @@ export default function AdminProducts() {
                                         )}
                                     </td>
                                     <td className="p-3 font-medium">{p.name}</td>
-                                    <td className="p-3">{p.category}</td>
-                                    <td className="p-3">${p.price}</td>
-                                    {/* Details preview */}
-                                    <td className="p-3 text-sm text-gray-600">
-                                        {p.details && p.details.length > 0
-                                            ? `${p.details.slice(0, 2).join(", ")}${
-                                                p.details.length > 2 ? "..." : ""
-                                            }`
-                                            : "-"}
+                                    <td className="p-3">{p.product_type}</td>
+                                    <td className="p-3">{p.category_name || "-"}</td>
+                                    <td className="p-3">
+                                        {p.product_type === "rental"
+                                            ? `₦${p.rental_price_per_day || "-"}/day`
+                                            : `₦${p.price || "-"}`}
                                     </td>
-                                    {/* Delivery preview */}
+                                    <td className="p-3">{p.stock}</td>
                                     <td className="p-3 text-sm text-gray-600">
-                                        {p.deliveryInfo && p.deliveryInfo.length > 0
-                                            ? `${p.deliveryInfo.slice(0, 2).join(", ")}${
-                                                p.deliveryInfo.length > 2 ? "..." : ""
+                                        {p.product_details
+                                            ? `${p.product_details.slice(0, 2).join(", ")}${
+                                                p.product_details.length > 2 ? "..." : ""
                                             }`
                                             : "-"}
                                     </td>
@@ -251,9 +390,8 @@ export default function AdminProducts() {
 
             {/* Add/Edit Product Modal */}
             {open && (
-                <div className="fixed inset-0 bg-black/30 bg-opacity-50 flex md:items-center justify-center z-50">
-                    <div className="bg-white rounded-xl shadow-lg p-6 md:w-1/2 w-screen  relative h-screen overflow-y-scroll">
-                        {/* Close Button */}
+                <div className="fixed inset-0 bg-black/30 flex md:items-center justify-center z-50">
+                    <div className="bg-white rounded-xl shadow-lg p-6 w-[90%] h-[90%] relative overflow-y-scroll">
                         <button
                             className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
                             onClick={() => {
@@ -272,197 +410,5 @@ export default function AdminProducts() {
                 </div>
             )}
         </div>
-    );
-}
-
-function ProductForm({ product, onSave }) {
-    const [name, setName] = useState(product?.name || "");
-    const [category, setCategory] = useState(product?.category || "");
-    const [price, setPrice] = useState(product?.price || "");
-    const [image, setImage] = useState(product?.image || "");
-    const [details, setDetails] = useState(product?.details || []);
-    const [deliveryInfo, setDeliveryInfo] = useState(product?.deliveryInfo || []);
-    const [detailInput, setDetailInput] = useState("");
-    const [deliveryInput, setDeliveryInput] = useState("");
-
-    const addDetail = () => {
-        if (detailInput.trim()) {
-            setDetails([...details, detailInput]);
-            setDetailInput("");
-        }
-    };
-
-
-    const removeDetail = (index) => {
-        setDetails(details.filter((_, i) => i !== index));
-    };
-
-    const addDelivery = () => {
-        if (deliveryInput.trim()) {
-            setDeliveryInfo([...deliveryInfo, deliveryInput]);
-            setDeliveryInput("");
-        }
-    };
-
-    const removeDelivery = (index) => {
-        setDeliveryInfo(deliveryInfo.filter((_, i) => i !== index));
-    };
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        onSave({ name, category, price, image, details, deliveryInfo });
-    };
-
-    return (
-        <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Name */}
-            <div>
-                <label className="block text-sm font-medium">Product Name</label>
-                <input
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full mt-1 p-2 border rounded-lg"
-                    placeholder="Enter product name"
-                    required
-                />
-            </div>
-
-            {/* Category */}
-            <div>
-                <label className="block text-sm font-medium">Category</label>
-                <input
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="w-full mt-1 p-2 border rounded-lg"
-                    placeholder="e.g. Toiletries"
-                    required
-                />
-            </div>
-
-            {/* Price */}
-            <div>
-                <label className="block text-sm font-medium">Price ($)</label>
-                <input
-                    type="number"
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                    className="w-full mt-1 p-2 border rounded-lg"
-                    placeholder="Enter price"
-                    required
-                />
-            </div>
-
-            {/* Image Upload */}
-            <div>
-                <label className="block text-sm font-medium">Product Image</label>
-                <div className="flex items-center space-x-3 mt-1">
-                    <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => setImage(URL.createObjectURL(e.target.files[0]))}
-                        className="hidden"
-                        id="upload"
-                    />
-                    <label
-                        htmlFor="upload"
-                        className="cursor-pointer px-3 py-2 border rounded-lg flex items-center space-x-2 hover:bg-gray-100"
-                    >
-                        <Upload className="w-4 h-4 text-gray-500" />
-                        <span>Upload</span>
-                    </label>
-                    {image && (
-                        <img
-                            src={image}
-                            alt="Preview"
-                            className="w-12 h-12 rounded-lg object-cover"
-                        />
-                    )}
-                </div>
-            </div>
-
-            {/* Product Details */}
-            <div>
-                <label className="block text-sm font-medium">Product Details</label>
-                <div className="flex gap-2 mt-1">
-                    <input
-                        type="text"
-                        value={detailInput}
-                        onChange={(e) => setDetailInput(e.target.value)}
-                        placeholder="Add detail..."
-                        className="border rounded-lg p-2 flex-1"
-                    />
-                    <button
-                        type="button"
-                        onClick={addDetail}
-                        className="px-3 py-1 bg-orange-500 text-white rounded-lg"
-                    >
-                        Add
-                    </button>
-                </div>
-                <ul className="mt-2 space-y-1">
-                    {details.map((d, i) => (
-                        <li
-                            key={i}
-                            className="flex items-center justify-between bg-gray-100 px-2 py-1 rounded"
-                        >
-                            <span>{d}</span>
-                            <button
-                                type="button"
-                                onClick={() => removeDetail(i)}
-                                className="text-red-600 hover:text-red-800"
-                            >
-                                ❌
-                            </button>
-                        </li>
-                    ))}
-                </ul>
-            </div>
-
-            {/* Delivery Info */}
-            <div>
-                <label className="block text-sm font-medium">Delivery Info</label>
-                <div className="flex gap-2 mt-1">
-                    <input
-                        type="text"
-                        value={deliveryInput}
-                        onChange={(e) => setDeliveryInput(e.target.value)}
-                        placeholder="Add delivery info..."
-                        className="border rounded-lg p-2 flex-1"
-                    />
-                    <button
-                        type="button"
-                        onClick={addDelivery}
-                        className="px-3 py-1 bg-orange-500 text-white rounded-lg"
-                    >
-                        Add
-                    </button>
-                </div>
-                <ul className="mt-2 space-y-1">
-                    {deliveryInfo.map((d, i) => (
-                        <li
-                            key={i}
-                            className="flex items-center justify-between bg-gray-100 px-2 py-1 rounded"
-                        >
-                            <span>{d}</span>
-                            <button
-                                type="button"
-                                onClick={() => removeDelivery(i)}
-                                className="text-red-600 hover:text-red-800"
-                            >
-                                ❌
-                            </button>
-                        </li>
-                    ))}
-                </ul>
-            </div>
-
-            {/* Submit */}
-            <button
-                type="submit"
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-lg"
-            >
-                Save Product
-            </button>
-        </form>
     );
 }

@@ -1,98 +1,120 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
-    Package,
-    LayoutDashboard,
     ShoppingCart,
-    Users,
-    CreditCard,
-    LogOut,
     Eye,
     ChevronLeft,
     ChevronRight,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import Sidebar from "../components/Sidebar.jsx";
+import { API_BASE_URL } from "../constants/index.js";
 
 export default function AdminOrders() {
     const navigate = useNavigate();
 
-    const [orders] = useState([
-        {
-            id: 1,
-            customer: "John Doe",
-            products: [
-                { name: "Cement", qty: 5 },
-                { name: "Bricks", qty: 50 },
-                { name: "Iron Rods", qty: 10 },
-            ],
-            status: "Pending",
-            date: "2025-09-01"
-        },
-        {
-            id: 2,
-            customer: "Jane Smith",
-            products: [{ name: "Mixer", qty: 1 }],
-            status: "Shipped",
-            date: "2025-09-02"
-        },
-        {
-            id: 3,
-            customer: "Samuel Green",
-            products: [
-                { name: "Cement", qty: 10 },
-                { name: "Iron Rods", qty: 20 },
-                { name: "Sand", qty: 3 },
-                { name: "Tiles", qty: 40 },
-            ],
-            status: "Delivered",
-            date: "2025-09-03"
-        },
-    ]);
+    const [orders, setOrders] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [notification, setNotification] = useState("");
+    const [isErrorNotification, setIsErrorNotification] = useState(false);
 
-    // Filters
     const [statusFilter, setStatusFilter] = useState("All");
     const [search, setSearch] = useState("");
-
-    // Pagination
-    const [page, setPage] = useState(1);
-    const pageSize = 5;
-
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
 
-    // Filter logic (by customer OR product name)
-    const filteredOrders = orders.filter((o) => {
-        const matchesStatus =
-            statusFilter === "All" ? true : o.status === statusFilter;
+    const [page, setPage] = useState(1);
+    const [limit] = useState(5);
+    const [totalPages, setTotalPages] = useState(1);
 
-        const matchesSearch =
-            o.customer.toLowerCase().includes(search.toLowerCase()) ||
-            o.products.some((p) =>
-                p.name.toLowerCase().includes(search.toLowerCase())
-            );
+    // Fetch orders from API
+    const fetchOrders = async () => {
+        try {
+            setLoading(true);
+            const params = {
+                page,
+                limit,
+                status: statusFilter !== "All" ? statusFilter.toLowerCase() : undefined,
+                startDate: startDate || undefined,
+                endDate: endDate || undefined,
+                ref: search || undefined,
+            };
+            const res = await axios.get(`${API_BASE_URL}/api/orders`, { params });
+            setOrders(res.data.orders || []);
+            setTotalPages(Math.ceil(res.data.total / limit) || 1);
+        } catch (err) {
+            console.error(err);
+            showNotification("Failed to fetch orders", true);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-        const date = new Date(o.date);
-        const matchesStart = !startDate || date >= new Date(startDate);
-        const matchesEnd = !endDate || date <= new Date(endDate);
+    useEffect(() => {
+        fetchOrders();
+    }, [page, statusFilter, startDate, endDate]);
 
+    const showNotification = (msg, isError = false) => {
+        setNotification(msg);
+        setIsErrorNotification(isError);
+        setTimeout(() => setNotification(""), 3000);
+    };
 
-        return matchesStatus && matchesSearch && matchesStart && matchesEnd;
-    });
+    // // Update order status
+    // const updateStatus = async (orderId, status) => {
+    //     try {
+    //         await axios.put(`${API_BASE_URL}/api/orders/status/${orderId}`, { status });
+    //         showNotification("Order status updated successfully");
+    //         fetchOrders();
+    //     } catch (err) {
+    //         console.error(err);
+    //         showNotification("Failed to update order status", true);
+    //     }
+    // };
 
-    // Pagination logic
-    const totalPages = Math.ceil(filteredOrders.length / pageSize);
-    const paginatedOrders = filteredOrders.slice(
-        (page - 1) * pageSize,
-        page * pageSize
-    );
+    // Cancel order
+    // const cancelOrder = async (orderId) => {
+    //     const confirmCancel = window.confirm("Are you sure you want to cancel this order?");
+    //     if (!confirmCancel) return;
+    //
+    //     try {
+    //         await axios.put(`${API_BASE_URL}/api/orders/cancel/${orderId}`);
+    //         showNotification("Order cancelled successfully");
+    //         fetchOrders();
+    //     } catch (err) {
+    //         console.error(err);
+    //         showNotification("Failed to cancel order", true);
+    //     }
+    // };
+
+    const applyFilters = async () => {
+        setPage(1);
+        fetchOrders();
+    }
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex min-h-screen min-w-screen overflow-y-hidden">
-            {/* Sidebar */}
             <Sidebar />
 
-            {/* Main Content */}
             <div className="w-full md:px-6 py-6">
+                {notification && (
+                    <div
+                        className={`absolute top-4 left-1/2 z-50 -translate-x-1/2 ${
+                            isErrorNotification ? "bg-red-500" : "bg-green-500"
+                        } text-white px-4 py-2 rounded shadow`}
+                    >
+                        {notification}
+                    </div>
+                )}
+
                 {/* Header */}
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold flex items-center space-x-2">
@@ -102,10 +124,10 @@ export default function AdminOrders() {
                 </div>
 
                 {/* Filters */}
-                <div className="flex items-center space-x-4 mb-6">
+                <div className="flex flex-wrap items-center gap-4 mb-6">
                     <input
                         type="text"
-                        placeholder="Search..."
+                        placeholder="Search by Ref..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="p-2 border rounded-lg w-64"
@@ -117,25 +139,41 @@ export default function AdminOrders() {
                     >
                         <option>All</option>
                         <option>Pending</option>
+                        <option>Processing</option>
                         <option>Shipped</option>
-                        <option>Delivered</option>
+                        <option>Completed</option>
+                        <option>Cancelled</option>
                     </select>
-
-                    {/* Date Filters */}
                     <input
                         type="date"
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
                         className="border rounded-lg px-3 py-2"
-                        placeholder="Start Date"
                     />
                     <input
                         type="date"
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
                         className="border rounded-lg px-3 py-2"
-                        placeholder="End Date"
                     />
+                    <button
+                        onClick={() => applyFilters()}
+                        className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg"
+                    >
+                        Apply
+                    </button>
+                    <button
+                        onClick={() => {
+                            setStatusFilter("All");
+                            setSearch("");
+                            setStartDate("");
+                            setEndDate("");
+                            setPage(1);
+                        }}
+                        className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg"
+                    >
+                        Reset
+                    </button>
                 </div>
 
                 {/* Orders Table */}
@@ -144,46 +182,45 @@ export default function AdminOrders() {
                         <table className="w-full border-collapse">
                             <thead className="bg-gray-100 text-gray-700 text-sm">
                             <tr>
-                                <th className="p-3 text-left">Order ID</th>
+                                <th className="p-3 text-left">Order Ref</th>
                                 <th className="p-3 text-left">Customer</th>
-                                <th className="p-3 text-left">Products</th>
+                                <th className="p-3 text-left">Total Amount</th>
                                 <th className="p-3 text-left">Status</th>
-                                <th className="px-6 py-3 text-left">Date</th>
+                                <th className="p-3 text-left">Date</th>
                                 <th className="p-3 text-left">Actions</th>
                             </tr>
                             </thead>
                             <tbody>
-                            {paginatedOrders.map((o) => (
-                                <tr key={o.id} className="border-b hover:bg-gray-50">
-                                    <td className="p-3 font-medium">#{o.id}</td>
-                                    <td className="p-3">{o.customer}</td>
-                                    <td className="p-3 text-sm text-gray-700">
-                                        {o.products.slice(0, 2).map((p, i) => (
-                                            <span key={i} className="mr-2">
-                                                {p.qty}x {p.name}
-                                              </span>
-                                                            ))}
-                                                            {o.products.length > 2 && (
-                                                                <span className="text-gray-500">
-                                                +{o.products.length - 2} more...
-                                              </span>
-                                                            )}
-                                                        </td>
-                                                        <td className="p-3">
-                                            <span
-                                                className={`px-2 py-1 text-xs rounded-lg ${
-                                                    o.status === "Pending"
-                                                        ? "bg-yellow-100 text-yellow-700"
-                                                        : o.status === "Shipped"
-                                                            ? "bg-blue-100 text-blue-700"
-                                                            : "bg-green-100 text-green-700"
-                                                }`}
-                                            >
-                                              {o.status}
-                                            </span>
+                            {orders.map((o) => (
+                                <tr key={o.ref} className="border-b hover:bg-gray-50">
+                                    <td className="p-3 font-medium">{o.ref}</td>
+                                    <td className="p-3">{o.customer_name}</td>
+                                    <td className="p-3">
+                                        {new Intl.NumberFormat('en-NG', {
+                                        style: 'currency',
+                                        currency: 'NGN',
+                                        minimumFractionDigits: 2,
+                                    }).format(o.total_amount).replace('NGN', '').trim()}
                                     </td>
-                                    <td className="px-6 py-4">{o.date}</td>
-                                    <td className="p-3 text-left">
+                                    <td className="p-3">
+                      <span
+                          className={`px-2 py-1 text-xs rounded-lg ${
+                              o.status === "pending"
+                                  ? "bg-yellow-100 text-yellow-700"
+                                  : o.status === "processing"
+                                      ? "bg-purple-100 text-purple-700"
+                                      : o.status === "shipped"
+                                          ? "bg-blue-100 text-blue-700"
+                                          : o.status === "completed"
+                                              ? "bg-green-100 text-green-700"
+                                              : "bg-red-100 text-red-700"
+                          }`}
+                      >
+                        {o.status}
+                      </span>
+                                    </td>
+                                    <td className="p-3">{new Date(o.created_at).toLocaleDateString()}</td>
+                                    <td className="p-3 flex space-x-2">
                                         <button
                                             onClick={() => navigate(`/admin/orders/${o.id}`)}
                                             className="text-orange-600 hover:text-orange-800"
@@ -191,12 +228,28 @@ export default function AdminOrders() {
                                         >
                                             <Eye className="w-5 h-5" />
                                         </button>
+                                        {/*{o.status !== "cancelled" && (*/}
+                                        {/*    <>*/}
+                                        {/*        <button*/}
+                                        {/*            onClick={() => updateStatus(o.id, "shipped")}*/}
+                                        {/*            className="text-blue-600 hover:text-blue-800 text-sm px-2 py-1 border rounded"*/}
+                                        {/*        >*/}
+                                        {/*            Mark Shipped*/}
+                                        {/*        </button>*/}
+                                        {/*        <button*/}
+                                        {/*            onClick={() => cancelOrder(o.id)}*/}
+                                        {/*            className="text-red-600 hover:text-red-800 text-sm px-2 py-1 border rounded"*/}
+                                        {/*        >*/}
+                                        {/*            Cancel*/}
+                                        {/*        </button>*/}
+                                        {/*    </>*/}
+                                        {/*)}*/}
                                     </td>
                                 </tr>
                             ))}
-                            {paginatedOrders.length === 0 && (
+                            {orders.length === 0 && (
                                 <tr>
-                                    <td colSpan="5" className="p-4 text-center text-gray-500">
+                                    <td colSpan="6" className="p-4 text-center text-gray-500">
                                         No orders found
                                     </td>
                                 </tr>
