@@ -7,7 +7,7 @@ const ProductFilters = ({ setCategory, setSort, setSearch }) => {
 
     const fetchCategories = async () => {
         try {
-            const response = await axios.get(`${API_BASE_URL}/api/categories`);
+            const response = await axios.get(`${API_BASE_URL}/api/categories/all`);
             // Add "All Categories" option at the start
             setCategories([{ id: "All", name: "All Categories" }, ...response.data.categories]);
         } catch (error) {

@@ -1,4 +1,16 @@
-import {X, Menu, LayoutDashboard, Package, ShoppingCart, Users, CreditCard, LogOut, Tags} from "lucide-react";
+import {
+    X,
+    Menu,
+    LayoutDashboard,
+    Package,
+    ShoppingCart,
+    Users,
+    CreditCard,
+    LogOut,
+    Tags,
+    Wrench,
+    Clipboard
+} from "lucide-react";
 import {Link} from "react-router-dom";
 import {useState} from "react";
 
@@ -19,6 +31,7 @@ export default function Sidebar() {
         { icon: <Package />, label: "Products", link: "/admin/products" },
         { icon: <Tags />, label: "Category", link: "/admin/categories" },
         { icon: <ShoppingCart />, label: "Orders", link: "/admin/orders" },
+        { icon: <Clipboard />, label: "Rentals", link: "/admin/rentals" },
         { icon: <Users />, label: "Users", link: "/admin/users" },
         { icon: <CreditCard />, label: "Payment", link: "/admin/payments" },
     ];

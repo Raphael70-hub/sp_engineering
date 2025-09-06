@@ -72,7 +72,7 @@ export default function ProductDetail() {
     if (!product) return <div className="p-10">Product not found</div>;
 
     // Parse other_images JSON string
-    const otherImages = product.other_images ? JSON.parse(product.other_images) : [];
+    const otherImages = product.other_images ? product.other_images : [];
 
     return (
         <>

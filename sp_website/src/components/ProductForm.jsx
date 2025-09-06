@@ -273,7 +273,7 @@ export default function ProductForm({ product, onSave }) {
                     className="mt-1 border rounded-lg p-3"
                 />
                 <div className="flex gap-2 mt-2 flex-wrap">
-                    {otherImages.map((img, i) => (
+                    {!product && (otherImages.map((img, i) => (
                         <div key={i} className="relative">
                             <img
                                 src={
@@ -292,7 +292,7 @@ export default function ProductForm({ product, onSave }) {
                                 <X size={12} />
                             </button>
                         </div>
-                    ))}
+                    )))}
                 </div>
             </div>
 

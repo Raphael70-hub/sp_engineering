@@ -24,6 +24,8 @@ import AdminUsers from "./pages/AdminUsers.jsx";
 import AdminPayments from "./pages/AdminPayments.jsx";
 import AdminCategory from "./pages/AdminCategory.jsx";
 import AdminPaymentDetail from "./pages/AdminPaymentDetail.jsx";
+import AdminRentals from "./pages/AdminRentals.jsx";
+import AdminRentalDetail from "./pages/AdminRentalDetail.jsx";
 
 function App() {
 
@@ -53,6 +55,8 @@ function App() {
           <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/admin/payments" element={<AdminPayments />} />
           <Route path="/admin/payments/:id" element={<AdminPaymentDetail />} />
+          <Route path="/admin/rentals" element={<AdminRentals />} />
+          <Route path="/admin/rentals/:id" element={<AdminRentalDetail />} />
       </Routes>
   )
 }

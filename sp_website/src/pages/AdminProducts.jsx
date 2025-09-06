@@ -35,7 +35,7 @@ export default function AdminProducts() {
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const res = await axios.get(`${API_BASE_URL}/api/categories`);
+                const res = await axios.get(`${API_BASE_URL}/api/categories/all`);
                 setCategories(res.data.categories || []);
             } catch (err) {
                 console.error(err);
@@ -120,6 +120,7 @@ export default function AdminProducts() {
                 showNotification(successMessage);
             }
             setOpen(false);
+            setEditing(null);
             setEditing(null);
             fetchProducts();
         } catch (err) {
