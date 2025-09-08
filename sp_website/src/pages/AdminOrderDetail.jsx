@@ -169,7 +169,9 @@ export default function AdminOrderDetail() {
                         <p><strong>Status:</strong> <span
                             className={`px-2 py-1 text-xs rounded-lg ${
                                 order.status === "pending"
-                                    ? "bg-yellow-100 text-yellow-700"
+                                    ? "bg-yellow-100 text-yellow-700" :
+                                    order.status === "confirmed"
+                                        ? "bg-blue-100 text-blue-700"
                                     : order.status === "processing"
                                         ? "bg-purple-100 text-purple-700"
                                         : order.status === "shipped"

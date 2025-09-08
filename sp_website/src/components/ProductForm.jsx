@@ -10,6 +10,7 @@ export default function ProductForm({ product, onSave }) {
     const [categories, setCategories] = useState([]);
     const [price, setPrice] = useState(product?.price || "");
     const [stock, setStock] = useState(product?.stock || "");
+    const [shippingFee, setShippingFee] = useState(product?.shipping_fee || 0.00);
     const [productType, setProductType] = useState(product?.product_type || "product");
     const [rentalPrice, setRentalPrice] = useState(product?.rental_price_per_day || "");
     const [image, setImage] = useState(product?.image_url || null);
@@ -110,6 +111,7 @@ export default function ProductForm({ product, onSave }) {
                 category_id: parseInt(categoryId),
                 product_type: productType,
                 rental_price_per_day: productType === "rental" ? parseFloat(rentalPrice) : 0,
+                shipping_fee : parseFloat(shippingFee),
                 product_details: productDetails,
                 delivery_info: deliveryInfo,
                 created_by: product?.created_by || 1,
@@ -226,6 +228,18 @@ export default function ProductForm({ product, onSave }) {
                     onChange={(e) => setStock(e.target.value)}
                     className="w-full mt-1 p-2 border rounded-lg"
                     placeholder="Enter stock quantity"
+                    required
+                />
+            </div>
+
+            <div>
+                <label className="block text-sm font-medium">Shipping fee</label>
+                <input
+                    type="number"
+                    value={shippingFee}
+                    onChange={(e) => setShippingFee(e.target.value)}
+                    className="w-full mt-1 p-2 border rounded-lg"
+                    placeholder="Enter shipping fee"
                     required
                 />
             </div>

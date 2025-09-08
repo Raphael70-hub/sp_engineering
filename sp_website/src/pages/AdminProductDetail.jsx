@@ -166,6 +166,7 @@ export default function AdminProductDetail() {
                                 <li key={i}>{d}</li>
                             ))}
                         </ul>
+                        <p className="text-gray-500">Shipping Fee: {product.shipping_fee}</p>
                     </div>
                 )}
 

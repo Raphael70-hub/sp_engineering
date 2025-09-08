@@ -6,6 +6,7 @@ import Pagination from "../components/Pagination.jsx";
 import axios from "axios";
 import debounce from "lodash.debounce"; // npm install lodash.debounce
 import { API_BASE_URL } from "../constants/index.js";
+import {Link} from "react-router-dom";
 
 const Services = () => {
     const [equipment, setEquipment] = useState([]);
@@ -184,7 +185,7 @@ const Services = () => {
                                         className="bg-white shadow-md rounded-xl p-6 hover:shadow-lg transition"
                                     >
                                         <img
-                                            src={item.image_url}
+                                            src={API_BASE_URL + item.image_url}
                                             alt={item.name}
                                             className="w-full h-40 object-cover rounded-lg mb-4"
                                         />
@@ -210,6 +211,12 @@ const Services = () => {
                                         >
                                             {item.stock > 0 ? "Available" : "Out of Stock"}
                                         </p>
+                                        <Link
+                                            to={`/product/${item.id}`}
+                                            className="inline-block mt-3 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition"
+                                        >
+                                            View Details
+                                        </Link>
                                     </div>
                                 ))}
                             </div>
@@ -230,9 +237,9 @@ const Services = () => {
                             Hire equipment or request engineering services tailored to your needs.
                         </p>
                         <div className="space-x-4">
-                            <button className="bg-white text-orange-700 px-6 py-3 rounded-xl font-semibold shadow hover:bg-gray-200">
-                                Book Now
-                            </button>
+                            {/*<button className="bg-white text-orange-700 px-6 py-3 rounded-xl font-semibold shadow hover:bg-gray-200">*/}
+                            {/*    Book Now*/}
+                            {/*</button>*/}
                         </div>
                     </section>
                 </div>

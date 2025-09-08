@@ -206,7 +206,9 @@ export default function AdminOrders() {
                       <span
                           className={`px-2 py-1 text-xs rounded-lg ${
                               o.status === "pending"
-                                  ? "bg-yellow-100 text-yellow-700"
+                                  ? "bg-yellow-100 text-yellow-700" :
+                                  o.status === "confirmed"
+                                      ? "bg-blue-100 text-blue-700"
                                   : o.status === "processing"
                                       ? "bg-purple-100 text-purple-700"
                                       : o.status === "shipped"

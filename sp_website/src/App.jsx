@@ -26,6 +26,8 @@ import AdminCategory from "./pages/AdminCategory.jsx";
 import AdminPaymentDetail from "./pages/AdminPaymentDetail.jsx";
 import AdminRentals from "./pages/AdminRentals.jsx";
 import AdminRentalDetail from "./pages/AdminRentalDetail.jsx";
+import CheckoutRentalPage from "./pages/CheckoutRentalPage.jsx";
+import CheckoutProductsPage from "./pages/CheckoutProductsPage.jsx";
 
 function App() {
 
@@ -37,7 +39,9 @@ function App() {
           <Route path="/services" element={<Services />} />
           <Route path="/about" element={<AboutUs />} />
           <Route path="/cart" element={<CartPage />} />
-          <Route path="/checkout" element={<CheckoutPage />} />
+          {/*<Route path="/checkout" element={<CheckoutPage />} />*/}
+          <Route path="/checkout/products" element={<CheckoutProductsPage />} />
+          <Route path="/checkout/rental" element={<CheckoutRentalPage />} />
           <Route path="/order-confirmation" element={<OrderConfirmation />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/login" element={<LoginPage />} />

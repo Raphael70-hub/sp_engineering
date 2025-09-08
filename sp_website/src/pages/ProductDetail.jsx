@@ -5,9 +5,12 @@ import { Link, useParams } from "react-router-dom";
 import ProductReviews from "../components/ProductReviews.jsx";
 import axios from "axios";
 import { API_BASE_URL } from "../constants/index.js";
+import { useCart } from "../context/CartContext";
 
 export default function ProductDetail() {
     const { id } = useParams();
+    const { addProductToCart, addRentalToCart } = useCart();
+
     const [product, setProduct] = useState(null);
     const [selectedImage, setSelectedImage] = useState(null);
     const [quantity, setQuantity] = useState(1);
@@ -17,6 +20,12 @@ export default function ProductDetail() {
     const [loadingProduct, setLoadingProduct] = useState(true);
     const [loadingReviews, setLoadingReviews] = useState(true);
     const [error, setError] = useState("");
+    const [notification, setNotification] = useState("");
+    const [isErrorNotification, setIsErrorNotification] = useState(false);
+
+    // Rental dates
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
 
     useEffect(() => {
         const fetchProduct = async () => {
@@ -29,7 +38,7 @@ export default function ProductDetail() {
                 setSelectedImage(data.image_url);
                 setAvgRating(data.average_rating || 0);
 
-                // Fetch related products (same category, exclude current product)
+                // Related products
                 const relatedResponse = await axios.get(`${API_BASE_URL}/api/products`, {
                     params: { category_id: data.category_id, limit: 4 }
                 });
@@ -61,6 +70,72 @@ export default function ProductDetail() {
         fetchReviews();
     }, [id]);
 
+    const handleAddToCart = () => {
+        const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000)
+            .toISOString()
+            .split("T")[0];
+
+        if (product.product_type === "rental") {
+            if (!startDate || !endDate) {
+                setIsErrorNotification(true);
+                setNotification("Please select rental start and end dates");
+                setTimeout(() => setNotification(""), 3000);
+                return;
+            }
+
+            if (startDate < tomorrow) {
+                setIsErrorNotification(true);
+                setNotification("Start date must be from tomorrow onward");
+                setTimeout(() => setNotification(""), 3000);
+                return;
+            }
+
+            if (endDate < startDate) {
+                setIsErrorNotification(true);
+                setNotification("End date must be after start date");
+                setTimeout(() => setNotification(""), 3000);
+                return;
+            }
+
+            addRentalToCart({
+                id: product.id,
+                name: product.name,
+                image: API_BASE_URL + product.image_url,
+                type: "rental",
+                quantity: quantity,
+                rental_price_per_day: product.rental_price_per_day,
+                start_date: startDate,
+                end_date: endDate,
+                shipping_fee: parseFloat(product.shipping_fee),
+            });
+
+
+            setIsErrorNotification(false);
+            setNotification("Added to cart!");
+        }
+        else{
+            addProductToCart({
+                id: product.id,
+                name: product.name,
+                image: API_BASE_URL + product.image_url,
+                type: product.product_type,
+                quantity,
+                shipping_fee: parseFloat(product.shipping_fee),
+                price: product.price,
+                rental_price_per_day: product.rental_price_per_day,
+                start_date: product.product_type === "rental" ? startDate : null,
+                end_date: product.product_type === "rental" ? endDate : null,
+            });
+
+            setIsErrorNotification(false);
+            setNotification("Added to cart!");
+        }
+
+
+        setTimeout(() => setNotification(""), 3000);
+    };
+
+
     if (loadingProduct)
         return (
             <div className="flex justify-center items-center py-20">
@@ -71,12 +146,18 @@ export default function ProductDetail() {
     if (error) return <div className="p-10 text-center text-red-500">{error}</div>;
     if (!product) return <div className="p-10">Product not found</div>;
 
-    // Parse other_images JSON string
     const otherImages = product.other_images ? product.other_images : [];
 
     return (
         <>
             <PlainNavBar />
+
+            {/* Notification */}
+            {notification && (
+                <div className={`fixed top-4 left-1/2 transform -translate-x-1/2 ${isErrorNotification ?"bg-red-600" : "bg-green-600"} text-white px-6 py-3 rounded-lg shadow-lg z-50`}>
+                    {notification}
+                </div>
+            )}
 
             <div className="max-w-6xl mx-auto px-6 py-12 grid md:grid-cols-2 gap-10">
                 {/* Left: Product Images */}
@@ -105,7 +186,38 @@ export default function ProductDetail() {
                 <div>
                     <h1 className="text-3xl font-bold text-gray-800 mb-4">{product.name}</h1>
                     <p className="text-gray-600 mb-6">{product.description}</p>
-                    <p className="text-2xl font-semibold text-orange-600 mb-6">₦{product.price}</p>
+                    {product.product_type === "rental" ? (
+                        <p className="text-2xl font-semibold text-orange-600 mb-6">
+                            ₦{product.rental_price_per_day}/day
+                        </p>
+                    ) : (
+                        <p className="text-2xl font-semibold text-orange-600 mb-6">
+                            ₦{product.price}
+                        </p>
+                    )}
+
+                    {/* Rental Dates */}
+                    {product.product_type === "rental" && (
+                        <div className="mb-6">
+                            <label className="block mb-2 font-medium">Select Rental Dates:</label>
+                            <div className="flex gap-4">
+                                <input
+                                    type="date"
+                                    value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                                    className="border rounded-lg px-3 py-2"
+                                    min={new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split("T")[0]} // tomorrow
+                                />
+                                <input
+                                    type="date"
+                                    value={endDate}
+                                    onChange={(e) => setEndDate(e.target.value)}
+                                    className="border rounded-lg px-3 py-2"
+                                    min={startDate || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split("T")[0]} // same as or after start
+                                />
+                            </div>
+                        </div>
+                    )}
 
                     {/* Quantity Selector */}
                     <div className="flex items-center gap-3 mb-6">
@@ -125,7 +237,10 @@ export default function ProductDetail() {
                         </button>
                     </div>
 
-                    <button className="w-full bg-orange-600 text-white py-3 rounded-xl shadow-md hover:bg-orange-700 transition">
+                    <button
+                        onClick={handleAddToCart}
+                        className="w-full bg-orange-600 text-white py-3 rounded-xl shadow-md hover:bg-orange-700 transition"
+                    >
                         Add to Cart
                     </button>
                 </div>
