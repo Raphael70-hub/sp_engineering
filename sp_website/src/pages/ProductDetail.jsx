@@ -103,6 +103,7 @@ export default function ProductDetail() {
                 image: API_BASE_URL + product.image_url,
                 type: "rental",
                 quantity: quantity,
+                stock: product.stock,
                 rental_price_per_day: product.rental_price_per_day,
                 start_date: startDate,
                 end_date: endDate,
@@ -120,6 +121,7 @@ export default function ProductDetail() {
                 image: API_BASE_URL + product.image_url,
                 type: product.product_type,
                 quantity,
+                stock: product.stock,
                 shipping_fee: parseFloat(product.shipping_fee),
                 price: product.price,
                 rental_price_per_day: product.rental_price_per_day,
@@ -230,19 +232,29 @@ export default function ProductDetail() {
                         </button>
                         <span className="px-4">{quantity}</span>
                         <button
-                            onClick={() => setQuantity(quantity + 1)}
-                            className="px-3 py-1 border rounded-lg"
+                            onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                            disabled={quantity >= product.stock}
+                            className={`px-3 py-1 border rounded-lg ${quantity >= product.stock ? "opacity-50 cursor-not-allowed" : ""}`}
                         >
                             +
                         </button>
+                        <p className="px-3 text-sm text-orange-500">Available Units: {product.stock}</p>
                     </div>
 
-                    <button
-                        onClick={handleAddToCart}
-                        className="w-full bg-orange-600 text-white py-3 rounded-xl shadow-md hover:bg-orange-700 transition"
-                    >
-                        Add to Cart
-                    </button>
+                    {product.stock > 0 ? (
+                        <button
+                            onClick={handleAddToCart}
+                            className="w-full bg-orange-600 text-white py-3 rounded-xl shadow-md hover:bg-orange-700 transition"
+                        >
+                            Add to Cart
+                        </button>
+                    )
+                    :
+                    (
+                        <p className="text-sm text-red-600">Out of stock</p>
+                    )}
+
+
                 </div>
             </div>
 

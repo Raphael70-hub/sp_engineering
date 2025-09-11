@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Mail, Phone, MapPin, Send } from "lucide-react";
 import Footer from "../sections/Footer.jsx";
 import NavBar from "../sections/NavBar.jsx";
+import toast from "react-hot-toast";
+import * as emailjs from "@emailjs/browser";
 
 function ContactPage() {
     const [formData, setFormData] = useState({
@@ -9,6 +11,7 @@ function ContactPage() {
         email: "",
         message: "",
     });
+    const [loading, setLoading] = useState(false);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -16,10 +19,32 @@ function ContactPage() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        console.log("Form submitted:", formData);
-        // TODO: integrate with backend or email service
-        alert("Message sent successfully!");
-        setFormData({ name: "", email: "", message: "" });
+        setLoading(true);
+
+        const sendPromise = emailjs.send(
+            import.meta.env.VITE_EMAILJS_SERVICE_ID,
+            import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+            formData,
+            import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+        );
+
+        toast.promise(
+            sendPromise,
+            {
+                loading: "Sending message…",
+                success: "Message sent successfully 🎉",
+                error: "❌ Failed to send message. Try again later.",
+            }
+        );
+
+        sendPromise
+            .then(() => {
+                setFormData({ name: "", email: "", message: "" });
+            })
+            .catch((error) => {
+                console.error(error);
+            })
+            .finally(() => setLoading(false));
     };
 
     return (
@@ -77,10 +102,10 @@ function ContactPage() {
                             </div>
                             <button
                                 type="submit"
-                                className="w-full bg-orange-600 text-white py-3 px-6 rounded-lg flex items-center justify-center gap-2 hover:bg-orange-700"
+                                disabled={loading}
+                                className="w-full bg-orange-600 text-white py-3 rounded-lg hover:bg-orange-700 transition disabled:opacity-50"
                             >
-                                <Send className="w-5 h-5" />
-                                Send Message
+                                {loading ? "Sending..." : "Send Message"}
                             </button>
                         </form>
                     </div>

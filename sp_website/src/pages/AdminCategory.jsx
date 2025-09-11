@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import {Plus, Edit, Trash2, X, ChevronLeft, ChevronRight, Tags} from "lucide-react";
 // import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import Sidebar from "../components/Sidebar.jsx";
 import { API_BASE_URL } from "../constants/index.js";
+import api from "../api/index.js";
 
 export default function AdminCategory() {
     const [categories, setCategories] = useState([]);
@@ -29,7 +29,8 @@ export default function AdminCategory() {
                 limit: pageSize,
                 search: filterSearch || undefined,
             };
-            const res = await axios.get(`${API_BASE_URL}/api/categories`, { params });
+            // const res = await axios.get(`${API_BASE_URL}/api/categories`, { params });
+            const res = await api.get(`/api/categories`, { params });
             setCategories(res.data.categories || []);
             setTotalPages(Math.ceil(res.data.total / pageSize) || 1);
         } catch (err) {
@@ -56,14 +57,16 @@ export default function AdminCategory() {
             let response;
             if (editing) {
                 // Update category
-                response = await axios.patch(
-                    `${API_BASE_URL}/api/categories/${editing.id}`,
-                    formData
-                );
+                // response = await axios.patch(
+                //     `${API_BASE_URL}/api/categories/${editing.id}`,
+                //     formData
+                // );
+                response = await api.patch(`/api/categories/${editing.id}`, formData);
                 showNotification(response?.data?.message || "Category updated successfully");
             } else {
                 // Create category
-                response = await axios.post(`${API_BASE_URL}/api/categories`, formData);
+                // response = await axios.post(`${API_BASE_URL}/api/categories`, formData);
+                response = await api.post(`/api/categories`, formData);
                 showNotification(response?.data?.message || "Category created successfully");
             }
             setOpen(false);
@@ -86,7 +89,8 @@ export default function AdminCategory() {
         if (!confirmDelete) return;
         try {
             setLoading(true);
-            await axios.delete(`${API_BASE_URL}/api/categories/${id}`);
+            // await axios.delete(`${API_BASE_URL}/api/categories/${id}`);
+            await api.delete(`/api/categories/${id}`);
             showNotification("Category deleted successfully");
             fetchCategories();
         } catch (err) {

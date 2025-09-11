@@ -1,88 +1,119 @@
 import { useEffect, useState } from "react";
 import PlainNavBar from "../components/PlainNavBar.jsx";
 import Footer from "../sections/Footer.jsx";
-import axios from "axios";
 import { API_BASE_URL } from "../constants/index.js";
+import api, {getCurrentUser} from "../api/index.js";
 
 export default function ReviewsPage() {
     const [showModal, setShowModal] = useState(false);
-    const [selectedProduct, setSelectedProduct] = useState(null);
+    const [selectedItem, setSelectedItem] = useState(null); // order_item
     const [rating, setRating] = useState(0);
     const [review, setReview] = useState("");
 
-    const [products, setProducts] = useState([]);
+    const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     // Pagination
     const [page, setPage] = useState(1);
-    const [limit] = useState(6); // how many products per page
+    const [limit] = useState(6);
     const [totalPages, setTotalPages] = useState(1);
 
-    // TODO: Replace with real logged-in user ID
-    const userId = 2;
 
-    // Fetch products from orders
+    const [user, setUser] = useState(null);
+
     useEffect(() => {
-        const fetchProductsFromOrders = async () => {
+        const loadUser = async () => {
+            try {
+                const data = await getCurrentUser();
+                setUser(data);
+            } catch (err) {
+                console.error("Failed to load user:", err);
+            }
+        };
+        loadUser();
+    }, []);
+
+
+    //  Fetch pending reviews
+    useEffect(() => {
+        const fetchPendingReviews = async () => {
+            const loadUser = async () => {
+                try {
+                    const data = await getCurrentUser();
+                    return data;
+                } catch (err) {
+                    console.error("Failed to load user:", err);
+                }
+            };
+
+            const user = await loadUser();
+
+
+            const userId = user.id;
             setLoading(true);
             setError(null);
             try {
-                const res = await axios.get(`${API_BASE_URL}/api/orders?page=${page}&limit=50`);
-                // Extract unique products from orders
-                const allItems = res.data.orders.flatMap((order) => order.items || []);
-                const uniqueProducts = [];
-                const productMap = new Map();
+                // const res = await axios.get(
+                //     `${API_BASE_URL}/api/products/reviews/pending?user_id=${userId}`
+                // );
 
-                allItems.forEach((item) => {
-                    if (!productMap.has(item.product_id)) {
-                        productMap.set(item.product_id, true);
-                        uniqueProducts.push({
-                            id: item.product_id,
-                            name: item.product_name,
-                            image: item.product_image || "/images/placeholder.png",
-                        });
-                    }
-                });
+                const res = await api.get(
+                    `/api/products/reviews/pending?user_id=${userId}`
+                );
 
-                // pagination logic (local)
+                const pendingItems = res.data.pendingReviews || [];
+
+                // pagination (local)
                 const start = (page - 1) * limit;
                 const end = start + limit;
-                setProducts(uniqueProducts.slice(start, end));
-                setTotalPages(Math.ceil(uniqueProducts.length / limit));
+                setItems(pendingItems.slice(start, end));
+                setTotalPages(Math.ceil(pendingItems.length / limit));
             } catch (err) {
                 console.error(err);
-                setError("Failed to load products from your orders.");
+                setError("Failed to load pending reviews.");
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchProductsFromOrders();
+        fetchPendingReviews();
     }, [page, limit]);
 
-    const handleOpenModal = (product) => {
-        setSelectedProduct(product);
+    const handleOpenModal = (item) => {
+        setSelectedItem(item);
         setShowModal(true);
     };
 
+    // Submit review
     const handleSubmit = async () => {
         if (!rating || !review.trim()) {
             alert("Please provide a rating and a comment.");
             return;
         }
 
+        const data = {
+            user_id: user.id,
+            order_item_id: selectedItem.order_item_id, // correct field
+            product_id: selectedItem.product_id,
+            rating: rating,
+            comment: review,
+        };
+
+        console.log("Submitting:", data);
+
         try {
-            await axios.post(`${API_BASE_URL}/api/products/${selectedProduct.id}/reviews`, {
-                user_id: userId,
-                rating,
-                comment: review,
-            });
+            // await axios.post(`${API_BASE_URL}/api/products/reviews`, data);
+            await api.post(`/api/products/reviews`, data);
 
             alert("Thank you for your review!");
             setShowModal(false);
             setRating(0);
             setReview("");
+
+            setItems((prev) =>
+                prev.filter((i) => i.order_item_id !== selectedItem.order_item_id) // ✅ correct filter
+            );
         } catch (err) {
             console.error(err);
             alert("Failed to submit review. Please try again.");
@@ -103,27 +134,31 @@ export default function ReviewsPage() {
                 {error && <p className="text-red-500">{error}</p>}
 
                 {!loading && !error && (
-                    <>
-                        {products.length === 0 ? (
-                            <p>You have no products to review yet.</p>
+                    <div className="min-h-screen">
+                        {items.length === 0 ? (
+                            <p>You have no products pending review 🎉</p>
                         ) : (
                             <>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {products.map((product) => (
+                                    {items.map((item) => (
                                         <div
-                                            key={product.id}
+                                            key={item.order_item_id}
                                             className="bg-white shadow-lg rounded-2xl p-6 flex flex-col items-center"
                                         >
                                             <img
-                                                src={API_BASE_URL + product.image}
-                                                alt={product.name}
+                                                src={
+                                                    item.product_image
+                                                        ? API_BASE_URL + item.product_image
+                                                        : "/images/placeholder.png"
+                                                }
+                                                alt={item.product_name}
                                                 className="h-32 mb-4 rounded-lg"
                                             />
                                             <h3 className="font-semibold text-lg mb-2">
-                                                {product.name}
+                                                {item.product_name}
                                             </h3>
                                             <button
-                                                onClick={() => handleOpenModal(product)}
+                                                onClick={() => handleOpenModal(item)}
                                                 className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition"
                                             >
                                                 Rate this Product
@@ -162,7 +197,7 @@ export default function ReviewsPage() {
                                 </div>
                             </>
                         )}
-                    </>
+                    </div>
                 )}
             </div>
 
@@ -171,7 +206,7 @@ export default function ReviewsPage() {
                 <div className="fixed inset-0 bg-black/30 bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white p-6 rounded-2xl shadow-xl max-w-md w-full">
                         <h3 className="text-xl font-bold mb-4">
-                            Review {selectedProduct?.name}
+                            Review {selectedItem?.product_name}
                         </h3>
 
                         {/* Star Rating */}

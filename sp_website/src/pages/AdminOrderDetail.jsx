@@ -7,8 +7,7 @@ import {
     XCircle,
 } from "lucide-react";
 import Sidebar from "../components/Sidebar.jsx";
-import axios from "axios";
-import { API_BASE_URL } from "../constants/index.js";
+import api from "../api/index.js";
 
 export default function AdminOrderDetail() {
     const { id } = useParams();
@@ -24,7 +23,7 @@ export default function AdminOrderDetail() {
     const fetchOrder = async () => {
         try {
             setLoading(true);
-            const res = await axios.get(`${API_BASE_URL}/api/orders/${id}`);
+            const res = await api.get(`/api/orders/${id}`);
             setOrder(res.data);
             setStatus(res.data.status);
         } catch (err) {
@@ -41,10 +40,10 @@ export default function AdminOrderDetail() {
         fetchOrder();
     }, [id]);
 
-    const handleDownloadInvoice = () => {
-        // TODO: Replace with backend invoice endpoint
-        showNotification("Invoice downloaded for Order #" + order?.ref);
-    };
+    // const handleDownloadInvoice = () => {
+    //
+    //     showNotification("Invoice downloaded for Order #" + order?.ref);
+    // };
 
     const handleStatusChange = async (newStatus) => {
         if (!order || order.status === "completed" || order.status === "cancelled") {
@@ -52,7 +51,8 @@ export default function AdminOrderDetail() {
         }
         setUpdating(true);
         try {
-            const res = await axios.patch(`${API_BASE_URL}/api/orders/status/${id}`, { status: newStatus });
+            // const res = await axios.patch(`${API_BASE_URL}/api/orders/status/${id}`, { status: newStatus });
+            const res = await api.patch(`/api/orders/status/${id}`, { status: newStatus });
             setStatus(newStatus);
             setOrder({ ...order, status: newStatus });
             setIsErrorNotification(false);
@@ -75,7 +75,8 @@ export default function AdminOrderDetail() {
 
         setUpdating(true);
         try {
-            const res = await axios.patch(`${API_BASE_URL}/api/orders/cancel/${id}`);
+            // const res = await axios.patch(`${API_BASE_URL}/api/orders/cancel/${id}`);
+            const res = await api.patch(`/api/orders/cancel/${id}`);
             setStatus("cancelled");
             setOrder({ ...order, status: "cancelled" });
             setIsErrorNotification(false);
@@ -146,13 +147,13 @@ export default function AdminOrderDetail() {
                             <ShoppingCart className="w-6 h-6 text-orange-500" />
                             <span>{order.ref}</span>
                         </h1>
-                        <button
-                            onClick={handleDownloadInvoice}
-                            className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
-                        >
-                            <FileDown className="w-4 h-4" />
-                            <span>Download Invoice</span>
-                        </button>
+                        {/*<button*/}
+                        {/*    onClick={handleDownloadInvoice}*/}
+                        {/*    className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2"*/}
+                        {/*>*/}
+                        {/*    <FileDown className="w-4 h-4" />*/}
+                        {/*    <span>Download Invoice</span>*/}
+                        {/*</button>*/}
                     </div>
                 </div>
 

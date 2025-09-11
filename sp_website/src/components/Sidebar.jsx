@@ -11,7 +11,7 @@ import {
     Wrench,
     Clipboard
 } from "lucide-react";
-import {Link} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 import {useState} from "react";
 
 function SidebarItem({ icon, label, link, open }) {
@@ -25,6 +25,7 @@ function SidebarItem({ icon, label, link, open }) {
 
 export default function Sidebar() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const navigate = useNavigate();
 
     const navItems = [
         { icon: <LayoutDashboard />, label: "Dashboard", link: "/admin/dashboard" },
@@ -36,6 +37,11 @@ export default function Sidebar() {
         { icon: <CreditCard />, label: "Payment", link: "/admin/payments" },
     ];
 
+    const handleLogout = () => {
+        localStorage.removeItem("token");
+        navigate("/login");
+    };
+
     const bottomItems = [{ icon: <LogOut />, label: "Logout", link: "/login" },];
 
     return (
@@ -44,9 +50,9 @@ export default function Sidebar() {
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b">
                     <h2 className={`font-bold text-lg ${sidebarOpen ? "block" : "hidden"} text-white`}>SP Engineering</h2>
-                    <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-orange-500">
-                        {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
-                    </button>
+                    {/*<button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-orange-500">*/}
+                    {/*    {sidebarOpen ? <X size={20} /> : <Menu size={20} />}*/}
+                    {/*</button>*/}
                 </div>
 
                 {/* Navigation */}
@@ -61,9 +67,13 @@ export default function Sidebar() {
                     {/* Bottom Section */}
                     {bottomItems && (
                         <div className="p-4 fixed bottom-0">
-                            {bottomItems.map((item, idx) => (
-                                <SidebarItem key={idx} icon={item.icon} label={item.label} link={item.link} open={sidebarOpen} />
-                            ))}
+                            {/*{bottomItems.map((item, idx) => (*/}
+                            {/*    <SidebarItem key={idx} icon={item.icon} label={item.label} link={item.link} open={sidebarOpen} />*/}
+                            {/*))}*/}
+
+                            <button onClick={handleLogout} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 text-white hover:text-black  cursor-pointer">
+                                <span className="text-orange-500"><LogOut /></span>
+                            </button>
                         </div>
                     )}
                 </nav>

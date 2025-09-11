@@ -1,10 +1,10 @@
 // src/pages/AdminRentals.jsx
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { API_BASE_URL } from "../constants";
 import Sidebar from "../components/Sidebar";
-import {Search, ChevronLeft, ChevronRight, EyeIcon, Eye} from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import api from "../api/index.js";
 
 export default function AdminRentals() {
     const [rentals, setRentals] = useState([]);
@@ -15,7 +15,7 @@ export default function AdminRentals() {
         end_date: "",
     });
     const [page, setPage] = useState(1);
-    const [limit] = useState(10);
+    const limit = 10;
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(false);
     const [notification, setNotification] = useState("");
@@ -25,12 +25,8 @@ export default function AdminRentals() {
     const fetchRentals = async () => {
         try {
             setLoading(true);
-            const res = await axios.get(`${API_BASE_URL}/api/rentals`, {
-                params: {
-                    ...filters,
-                    page,
-                    limit,
-                },
+            const res = await api.get(`/api/rentals`, {
+                params: { ...filters, page, limit },
             });
             setRentals(res.data.bookings);
             setTotal(res.data.total);
@@ -53,7 +49,8 @@ export default function AdminRentals() {
     };
 
     const handleFilterChange = (e) => {
-        setFilters({ ...filters, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setFilters((f) => ({ ...f, [name]: value }));
     };
 
     const applyFilters = () => {
@@ -62,13 +59,13 @@ export default function AdminRentals() {
     };
 
     return (
-        <div className="flex min-h-screen bg-gray-100">
+        <div className="flex min-h-screen min-w-screen overflow-y-hidden bg-gray-100">
             <Sidebar />
-            <div className="flex-1 p-6">
+            <div className="w-full md:px-6 py-6">
                 {/* Notification */}
                 {notification && (
                     <div
-                        className={`absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded shadow text-white ${
+                        className={`absolute top-4 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded shadow text-white ${
                             isErrorNotification ? "bg-red-500" : "bg-green-500"
                         }`}
                     >
@@ -84,7 +81,7 @@ export default function AdminRentals() {
                     <input
                         type="email"
                         name="user_email"
-                        placeholder="User Email"
+                        placeholder="Search"
                         value={filters.user_email}
                         onChange={handleFilterChange}
                         className="border rounded p-2"
@@ -129,7 +126,7 @@ export default function AdminRentals() {
                         <thead className="bg-gray-50">
                         <tr>
                             <th className="p-3">Ref</th>
-                            <th className="p-3">Product</th>
+                            <th className="p-3">Items</th>
                             <th className="p-3">User</th>
                             <th className="p-3">Dates</th>
                             <th className="p-3">Quantity</th>
@@ -155,25 +152,35 @@ export default function AdminRentals() {
                             rentals.map((rental) => (
                                 <tr key={rental.id} className="border-t">
                                     <td className="p-3">{rental.ref}</td>
-                                    <td className="p-3">{rental.product_name}</td>
+                                    <td className="p-3">
+                                        {rental.items?.slice(0, 3).map((item, idx) => (
+                                            <div key={idx}>
+                                                <span className="font-medium">{item.product_name}</span> — {item.quantity} unit(s)
+                                            </div>
+                                        ))}
+                                        {rental.items?.length > 3 && <div className="text-gray-500">...</div>}
+                                    </td>
                                     <td className="p-3">
                                         <div>
                                             <p className="font-medium">{rental.user_name}</p>
-                                            <p className="text-gray-500 text-xs">
-                                                {rental.user_email}
-                                            </p>
+                                            <p className="text-gray-500 text-xs">{rental.user_email}</p>
                                             {rental.user_phone && (
-                                                <p className="text-gray-400 text-xs">
-                                                    {rental.user_phone}
-                                                </p>
+                                                <p className="text-gray-400 text-xs">{rental.user_phone}</p>
                                             )}
                                         </div>
                                     </td>
                                     <td className="p-3">
-                                        {new Date(rental.start_date).toLocaleDateString()} -{" "}
-                                        {new Date(rental.end_date).toLocaleDateString()}
+                                        {rental.items?.slice(0, 3).map((item, idx) => (
+                                            <div key={idx}>
+                                                {new Date(item.start_date).toLocaleDateString()} –{" "}
+                                                {new Date(item.end_date).toLocaleDateString()}
+                                            </div>
+                                        ))}
+                                        {rental.items?.length > 3 && <div className="text-gray-500">...</div>}
                                     </td>
-                                    <td className="p-3">{rental.quantity}</td>
+                                    <td className="p-3">
+                                        {rental.items?.reduce((sum, item) => sum + item.quantity, 0) || 0}
+                                    </td>
                                     <td className="p-3">
                                         ₦{parseFloat(rental.total_amount).toLocaleString()}
                                     </td>
@@ -193,10 +200,7 @@ export default function AdminRentals() {
                       </span>
                                     </td>
                                     <td className="p-3">
-                                        <button
-                                            onClick={() => navigate(`/admin/rentals/${rental.id}`)}
-                                            className="text-blue-600 hover:text-blue-800"
-                                        >
+                                        <button onClick={() => navigate(`/admin/rentals/${rental.id}`)} className="text-blue-600 hover:text-blue-800">
                                             <Eye className="w-4 h-4" />
                                         </button>
                                     </td>
@@ -210,7 +214,7 @@ export default function AdminRentals() {
                 {/* Pagination */}
                 <div className="flex justify-between items-center mt-4">
                     <button
-                        onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
                         disabled={page === 1}
                         className="px-3 py-1 border rounded flex items-center gap-1 disabled:opacity-50"
                     >
@@ -220,7 +224,7 @@ export default function AdminRentals() {
             Page {page} of {Math.ceil(total / limit) || 1}
           </span>
                     <button
-                        onClick={() => setPage((prev) => prev + 1)}
+                        onClick={() => setPage((p) => p + 1)}
                         disabled={page * limit >= total}
                         className="px-3 py-1 border rounded flex items-center gap-1 disabled:opacity-50"
                     >

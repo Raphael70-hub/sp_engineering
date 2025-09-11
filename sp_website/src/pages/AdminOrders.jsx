@@ -6,9 +6,9 @@ import {
     ChevronRight,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import Sidebar from "../components/Sidebar.jsx";
-import { API_BASE_URL } from "../constants/index.js";
+import api from "../api/index.js";
+
 
 export default function AdminOrders() {
     const navigate = useNavigate();
@@ -39,7 +39,7 @@ export default function AdminOrders() {
                 endDate: endDate || undefined,
                 ref: search || undefined,
             };
-            const res = await axios.get(`${API_BASE_URL}/api/orders`, { params });
+            const res = await api.get(`/api/orders`, { params });
             setOrders(res.data.orders || []);
             setTotalPages(Math.ceil(res.data.total / limit) || 1);
         } catch (err) {

@@ -2,9 +2,8 @@
 import { useState, useEffect } from "react";
 import Sidebar from "../components/Sidebar";
 import {Search, CreditCard, RefreshCw, Download, Eye} from "lucide-react";
-import axios from "axios";
-import { API_BASE_URL } from "../constants";
 import {useNavigate} from "react-router-dom";
+import api from "../api/index.js";
 
 export default function AdminPayments() {
     const navigate = useNavigate();
@@ -39,7 +38,8 @@ export default function AdminPayments() {
             if (endDate) params.endDate = endDate;
             if (searchQuery) params.ref = searchQuery;
 
-            const res = await axios.get(`${API_BASE_URL}/api/payments`, { params });
+            // const res = await axios.get(`${API_BASE_URL}/api/payments`, { params });
+            const res = await api.get(`/api/payments`, { params });
 
             setPayments(res.data.payments || []);
             setTotal(res.data.total || 0);
@@ -113,23 +113,25 @@ export default function AdminPayments() {
                         className="border rounded-lg px-3 py-2"
                     >
                         <option value="all">All Status</option>
-                        <option value="completed">Completed</option>
+                        <option value="success">Success</option>
                         <option value="pending">Pending</option>
+                        <option value="failed">Failed</option>
+                        <option value="refunded">Refunded</option>
                     </select>
 
-                    <select
-                        value={methodFilter}
-                        onChange={(e) => {
-                            setCurrentPage(1);
-                            setMethodFilter(e.target.value);
-                        }}
-                        className="border rounded-lg px-3 py-2"
-                    >
-                        <option value="all">All Providers</option>
-                        <option value="paystack">Paystack</option>
-                        <option value="flutterwave">Flutterwave</option>
-                        <option value="stripe">Stripe</option>
-                    </select>
+                    {/*<select*/}
+                    {/*    value={methodFilter}*/}
+                    {/*    onChange={(e) => {*/}
+                    {/*        setCurrentPage(1);*/}
+                    {/*        setMethodFilter(e.target.value);*/}
+                    {/*    }}*/}
+                    {/*    className="border rounded-lg px-3 py-2"*/}
+                    {/*>*/}
+                    {/*    <option value="all">All Providers</option>*/}
+                    {/*    <option value="paystack">Paystack</option>*/}
+                    {/*    <option value="flutterwave">Flutterwave</option>*/}
+                    {/*    <option value="stripe">Stripe</option>*/}
+                    {/*</select>*/}
 
                     {/* Date Filters */}
                     <input
@@ -176,9 +178,10 @@ export default function AdminPayments() {
                                 <tr>
                                     {/*<th className="px-6 py-3">ID</th>*/}
                                     {/*<th className="px-6 py-3">Order Ref</th>*/}
-                                    <th className="px-6 py-3">Ref</th>
+                                    <th className="px-6 py-3">Transaction Ref</th>
                                     <th className="px-6 py-3">Amount</th>
                                     <th className="px-6 py-3">Provider</th>
+                                    <th className="px-6 py-3">Order Ref</th>
                                     <th className="px-6 py-3">Status</th>
                                     <th className="px-6 py-3">Date</th>
                                     <th className="px-6 py-3">Action</th>
@@ -194,16 +197,18 @@ export default function AdminPayments() {
                                             ₦{parseFloat(payment.amount).toLocaleString()}
                                         </td>
                                         <td className="px-6 py-4 capitalize">{payment.provider}</td>
+                                        <td className="px-6 py-4 capitalize">{payment.order_ref}</td>
                                         <td className="px-6 py-4">
                                                 <span
-                                                    className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                                        payment.status === "completed"
+                                                    className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-medium ${
+                                                        payment.status === "success"
                                                             ? "bg-green-100 text-green-600"
-                                                            : "bg-yellow-100 text-yellow-600"
+                                                            : payment.status === "pending" ? "bg-yellow-100 text-yellow-600"
+                                                                :  payment.status === "refunded" ? "bg-blue-100 text-blue-600" : "bg-red-100 text-red-600"
                                                     }`}
                                                 >
                                                     {payment.status}
-                                                </span>
+                                                  </span>
                                         </td>
                                         <td className="px-6 py-4">
                                             {new Date(payment.created_at).toLocaleDateString()}

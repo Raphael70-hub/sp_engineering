@@ -1,11 +1,38 @@
-import React, { useState } from "react";
+import React, {useEffect, useState} from "react";
 import { navImg } from "../constants/index.js";
-import {Menu, ShoppingCart, X} from "lucide-react";
+import {Menu, ShoppingCart, User2, X} from "lucide-react";
 import {NavLink} from "react-router-dom";
 import AccountMenu from "../components/AccountMenu.jsx";
+import {getCurrentUser} from "../api/index.js";
+import PlainNavBar from "../components/PlainNavBar.jsx";
+import Footer from "./Footer.jsx";
 
 const NavBar = ({ title, subtitle, showButton = true }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const data = await getCurrentUser();
+        setUser(data);
+      } catch (err) {
+        console.error("Failed to load user:", err);
+      }
+    };
+    loadUser();
+  }, []);
+
+  if (!user) {
+    return (
+        <>
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <p className="text-gray-500">Loading ...</p>
+          </div>
+          <Footer />
+        </>
+    );
+  }
 
   return (
       <div
@@ -80,6 +107,18 @@ const NavBar = ({ title, subtitle, showButton = true }) => {
 
               <AccountMenu/>
 
+            {user.role === "admin" && (
+                <NavLink
+                    to="/admin/dashboard"
+                    className={({ isActive }) =>
+                        isActive ? "nav-link active-link" : "nav-link"
+                    }
+                >
+                  <User2 className="w-6 h-6 inline-flex mx-3" />
+                  Admin
+                </NavLink>
+            )}
+
           </div>
 
           {/* Mobile Menu Button */}
@@ -149,6 +188,18 @@ const NavBar = ({ title, subtitle, showButton = true }) => {
                 Cart
               </NavLink>
                 <AccountMenu/>
+
+              {user.role === "admin" && (
+                  <NavLink
+                      to="/admin/dashboard"
+                      className={({ isActive }) =>
+                          isActive ? "nav-link active-link" : "nav-link"
+                      }
+                  >
+                    <User2 className="w-6 h-6 inline-flex mx-3" />
+                    Admin
+                  </NavLink>
+              )}
 
             </div>
         )}

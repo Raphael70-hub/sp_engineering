@@ -1,14 +1,44 @@
+import {useEffect, useState} from "react";
 import { ShoppingBag } from "lucide-react";
 import { Card, CardContent } from "../components/Card.jsx";
 import Footer from "../sections/Footer.jsx";
 import PlainNavBar from "../components/PlainNavBar.jsx";
 import { useCart } from "../context/CartContext";
-import { useState } from "react";
 import { API_BASE_URL } from "../constants/index.js";
+import api, {getCurrentUser} from "../api/index.js";
 
 function CheckoutProductsPage() {
     const { productsCart, clearProductsCart } = useCart();
     const [shippingAddress, setShippingAddress] = useState("");
+    const [showModal, setShowModal] = useState(false);
+    const [loading, setLoading] = useState(false);
+
+    const [user, setUser] = useState(null);
+
+    useEffect(() => {
+        const loadUser = async () => {
+            try {
+                const data = await getCurrentUser();
+                setUser(data);
+            } catch (err) {
+                console.error("Failed to load user:", err);
+            }
+        };
+        loadUser();
+    }, []);
+
+
+    if (!user) {
+        return (
+            <>
+                <PlainNavBar />
+                <div className="flex items-center justify-center min-h-[60vh]">
+                    <p className="text-gray-500">Loading profile...</p>
+                </div>
+                <Footer />
+            </>
+        );
+    }
 
     const productsSubtotal = productsCart.reduce(
         (acc, item) => acc + item.price * item.quantity,
@@ -20,9 +50,7 @@ function CheckoutProductsPage() {
     );
     const totalPrice = productsSubtotal + productsShipping;
 
-
-    const handleCheckout = async (e) => {
-        e.preventDefault();
+    const handleCheckout = async () => {
         if (!productsCart.length) return alert("Your product cart is empty");
 
         const items = productsCart.map((item) => ({
@@ -34,22 +62,24 @@ function CheckoutProductsPage() {
         }));
 
         const payload = {
-            user_id: 1,
+            user_id: user.id,
             items,
-            created_by: 1,
+            created_by: user.id,
             status: "pending",
             shipping_address: shippingAddress,
-            email: "customer@example.com",
+            email: user.email,
             type: "product",
         };
 
         try {
-            const res = await fetch(`${API_BASE_URL}/api/payments/paystack/initiate`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            });
-            const data = await res.json();
+            setLoading(true);
+            // const res = await fetch(`${API_BASE_URL}/api/payments/paystack/initiate`, {
+            //     method: "POST",
+            //     headers: { "Content-Type": "application/json" },
+            //     body: JSON.stringify(payload),
+            // });
+            const res = await api.post(`/api/payments/paystack/initiate`, payload);
+            const data = await res.data;
             if (data.authorization_url) {
                 clearProductsCart();
                 window.location.href = data.authorization_url;
@@ -57,10 +87,22 @@ function CheckoutProductsPage() {
                 alert("Error starting payment: " + (data.error || "Unknown"));
             }
         } catch (err) {
+            clearProductsCart();
             console.error("Checkout failed", err);
             alert("Checkout failed");
         }
+        finally {
+            setLoading(false);
+        }
     };
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+        );
+    }
 
     return (
         <>
@@ -119,7 +161,13 @@ function CheckoutProductsPage() {
                     <div className="md:col-span-2">
                         <Card>
                             <CardContent className="p-6 space-y-6">
-                                <form onSubmit={handleCheckout} className="grid grid-cols-1 gap-4">
+                                <form
+                                    onSubmit={(e) => {
+                                        e.preventDefault();
+                                        setShowModal(true); // show confirmation modal
+                                    }}
+                                    className="grid grid-cols-1 gap-4"
+                                >
                                     <input
                                         type="text"
                                         placeholder="Shipping Address"
@@ -142,6 +190,36 @@ function CheckoutProductsPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Custom Confirmation Modal */}
+            {showModal && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black/30 bg-opacity-50 z-50">
+                    <div className="bg-white rounded-lg shadow-lg p-6 w-11/12 max-w-md">
+                        <h2 className="text-xl font-bold mb-4">Confirm Your Order</h2>
+                        <p className="mb-6">
+                            Are you sure you want to pay ₦{totalPrice.toLocaleString()} for your order?
+                        </p>
+                        <div className="flex justify-end gap-4">
+                            <button
+                                onClick={() => setShowModal(false)}
+                                className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowModal(false);
+                                    handleCheckout();
+                                }}
+                                className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
+                            >
+                                Confirm
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <Footer />
         </>
     );

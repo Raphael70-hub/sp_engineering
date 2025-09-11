@@ -1,10 +1,13 @@
 import {CheckCircle, XCircle} from "lucide-react";
-import {Link, useParams} from "react-router-dom";
+import {Link, useLocation} from "react-router-dom";
 import Footer from "../sections/Footer.jsx";
 import PlainNavBar from "../components/PlainNavBar.jsx";
 
 function OrderConfirmation() {
-    const { order_ref, status } = useParams();
+    const location = useLocation();
+    const queryParams = new URLSearchParams(location.search);
+    const status = queryParams.get("status");
+    const order_ref = queryParams.get("order_ref");
 
     return (
         <>

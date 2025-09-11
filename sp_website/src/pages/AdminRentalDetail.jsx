@@ -1,10 +1,10 @@
 // src/pages/AdminRentalDetail.jsx
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { API_BASE_URL } from "../constants";
 import Sidebar from "../components/Sidebar";
 import { ArrowLeft } from "lucide-react";
+import api from "../api/index.js";
 
 export default function AdminRentalDetail() {
     const { id } = useParams();
@@ -18,7 +18,8 @@ export default function AdminRentalDetail() {
     const fetchRental = async () => {
         try {
             setLoading(true);
-            const res = await axios.get(`${API_BASE_URL}/api/rentals/${id}`);
+            // const res = await axios.get(`${API_BASE_URL}/api/rentals/${id}`);
+            const res = await api.get(`/api/rentals/${id}`);
             setRental(res.data);
             setNewStatus(res.data.status);
         } catch (err) {
@@ -41,8 +42,12 @@ export default function AdminRentalDetail() {
     };
 
     const updateStatus = async () => {
+        setLoading(true);
         try {
-            await axios.patch(`${API_BASE_URL}/api/rentals/${id}/status`, {
+            // await axios.patch(`${API_BASE_URL}/api/rentals/${id}/status`, {
+            //     status: newStatus,
+            // });
+            await api.post(`/api/rentals/${id}/status`, {
                 status: newStatus,
             });
             showNotification("Status updated successfully");
@@ -50,6 +55,9 @@ export default function AdminRentalDetail() {
         } catch (err) {
             console.error(err);
             showNotification("Failed to update status", true);
+        }
+        finally {
+            setLoading(false);
         }
     };
 
@@ -85,26 +93,54 @@ export default function AdminRentalDetail() {
                 </button>
 
                 {/* Rental Info */}
-                <div className=" flex flex-col gap-2 bg-white rounded-lg shadow-md p-6 mb-6">
+                <div className="flex flex-col gap-2 bg-white rounded-lg shadow-md p-6 mb-6">
                     <h1 className="text-2xl font-bold mb-4">{rental.ref}</h1>
+
+                    {/* Rented Items */}
+                    <div className="mb-4">
+                        <h2 className="text-lg font-semibold mb-2">Rented Items</h2>
+                        {rental.items?.length ? (
+                            rental.items.map((item, idx) => (
+                                <div key={idx} className="mb-2 border-b pb-2 last:border-none last:pb-0">
+                                    <p>
+                                        <span className="font-medium">{item.product_name}</span> — {item.quantity} unit(s)
+                                    </p>
+                                    <p className="text-sm text-gray-600">
+                                        {new Date(item.start_date).toLocaleDateString()} - {new Date(item.end_date).toLocaleDateString()}
+                                    </p>
+                                </div>
+                            ))
+                        ) : (
+                            <p>No items found</p>
+                        )}
+                    </div>
+
                     <p>
-                        <span className="font-medium">Product:</span> {rental.product_name}
-                    </p>
-                    <p>
-                        <span className="font-medium">User:</span> {rental.user_name} (
-                        {rental.user_email})
+                        <span className="font-medium">User:</span> {rental.user_name} ({rental.user_email})
                     </p>
                     {rental.user_phone && <p>Phone: {rental.user_phone}</p>}
+
+                    {/* Aggregate Dates for all items */}
+                    {rental.items?.length ? (
+                        <p>
+                            <span className="font-medium">Rental Period:</span>{" "}
+                            {(() => {
+                                // Find earliest start date and latest end date among all items
+                                const startDates = rental.items.map(i => new Date(i.start_date));
+                                const endDates = rental.items.map(i => new Date(i.end_date));
+                                const earliest = new Date(Math.min(...startDates));
+                                const latest = new Date(Math.max(...endDates));
+                                return `${earliest.toLocaleDateString()} - ${latest.toLocaleDateString()}`;
+                            })()}
+                        </p>
+                    ) : null}
+
                     <p>
-                        <span className="font-medium">Dates:</span>{" "}
-                        {new Date(rental.start_date).toLocaleDateString()} -{" "}
-                        {new Date(rental.end_date).toLocaleDateString()}
+                        <span className="font-medium">Total Quantity:</span>{" "}
+                        {rental.items?.reduce((sum, item) => sum + item.quantity, 0) || rental.quantity || 0}
                     </p>
                     <p>
-                        <span className="font-medium">Quantity:</span> {rental.quantity}
-                    </p>
-                    <p>
-                        <span className="font-medium">Total:</span> ₦
+                        <span className="font-medium">Total Amount:</span> ₦
                         {parseFloat(rental.total_amount).toLocaleString()}
                     </p>
                     <p>
@@ -120,13 +156,13 @@ export default function AdminRentalDetail() {
                                             : "bg-red-100 text-red-700"
                             }`}
                         >
-                        {rental.status}
-                      </span>
+                            {rental.status}
+                        </span>
                     </p>
                 </div>
 
                 {/* Status Update */}
-                {rental.status != "completed" && rental.status != "cancelled" && (
+                {rental.status !== "completed" && rental.status !== "cancelled" && (
                     <div className="bg-white rounded-lg shadow-md p-6">
                         <h2 className="text-lg font-semibold mb-3">Update Status</h2>
                         <select

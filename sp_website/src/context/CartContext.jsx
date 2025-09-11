@@ -8,9 +8,9 @@ export const CartProvider = ({ children }) => {
         return stored ? JSON.parse(stored) : [];
     });
 
-    const [rentalCart, setRentalCart] = useState(() => {
-        const stored = localStorage.getItem("rentalCart");
-        return stored ? JSON.parse(stored) : null;
+    const [rentalsCart, setRentalsCart] = useState(() => {
+        const stored = localStorage.getItem("rentalsCart");
+        return stored ? JSON.parse(stored) : [];
     });
 
     useEffect(() => {
@@ -18,8 +18,8 @@ export const CartProvider = ({ children }) => {
     }, [productsCart]);
 
     useEffect(() => {
-        localStorage.setItem("rentalCart", JSON.stringify(rentalCart));
-    }, [rentalCart]);
+        localStorage.setItem("rentalsCart", JSON.stringify(rentalsCart));
+    }, [rentalsCart]);
 
     // Add product
     const addProductToCart = (newItem) => {
@@ -40,7 +40,20 @@ export const CartProvider = ({ children }) => {
 
     // Add rental (only one allowed)
     const addRentalToCart = (newRental) => {
-        setRentalCart(newRental); // overwrites previous rental
+        // setRentalCart(newRental); // overwrites previous rental
+        setRentalsCart((prev) => {
+            const existsIndex = prev.findIndex((item) => item.id === newRental.id);
+
+            if (existsIndex >= 0) {
+                return prev.map((item, idx) =>
+                    idx === existsIndex
+                        ? { ...item, quantity: item.quantity + newRental.quantity }
+                        : item
+                );
+            } else {
+                return [...prev, { ...newRental }];
+            }
+        });
     };
 
     //  Remove product
@@ -49,8 +62,9 @@ export const CartProvider = ({ children }) => {
     };
 
     //  Remove rental
-    const removeRentalFromCart = () => {
-        setRentalCart(null);
+    const removeRentalFromCart = (id) => {
+        // setRentalCart(null);
+        setRentalsCart((prev) => prev.filter((i) => i.id !== id));
     };
 
     //  Update product quantity
@@ -70,15 +84,31 @@ export const CartProvider = ({ children }) => {
         );
     };
 
+    const updateRentalQuantity = (id, type) => {
+        setRentalsCart((prev) =>
+            prev.map((i) =>
+                i.id === id
+                    ? {
+                        ...i,
+                        quantity:
+                            type === "increase"
+                                ? i.quantity + 1
+                                : Math.max(1, i.quantity - 1),
+                    }
+                    : i
+            )
+        );
+    };
+
     const clearProductsCart = () => setProductsCart([]);
 
 // Clear rental
-    const clearRentalCart = () => setRentalCart(null);
+    const clearRentalCart = () => setRentalsCart([]);
 
 // Clear everything
     const clearAllCart = () => {
         setProductsCart([]);
-        setRentalCart(null);
+        setRentalsCart([]);
     };
 
 
@@ -86,12 +116,13 @@ export const CartProvider = ({ children }) => {
         <CartContext.Provider
             value={{
                 productsCart,
-                rentalCart,
+                rentalsCart,
                 addProductToCart,
                 addRentalToCart,
                 removeProductFromCart,
                 removeRentalFromCart,
                 updateProductQuantity,
+                updateRentalQuantity,
                 clearProductsCart,
                 clearRentalCart,
                 clearAllCart,

@@ -7,55 +7,43 @@ import { useCart } from "../context/CartContext";
 function CartPage() {
     const {
         productsCart,
-        rentalCart,
+        rentalsCart,
         removeProductFromCart,
         removeRentalFromCart,
         updateProductQuantity,
-        addRentalToCart, // we’ll reuse this to update rental quantity
+        updateRentalQuantity,
     } = useCart();
 
-    // Helper to calculate days between rental dates
     const getRentalDays = (start, end) => {
         if (!start || !end) return 0;
         const startDate = new Date(start);
         const endDate = new Date(end);
         const diffTime = endDate - startDate;
         if (diffTime < 0) return 0;
-        return Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1; // inclusive
+        return Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
     };
 
-    // Products subtotal
     const productsSubtotal = productsCart.reduce(
         (acc, item) => acc + item.price * item.quantity,
         0
     );
-
     const productsShipping = productsCart.reduce(
-        (acc, item) => acc + (item.shipping_fee * 1.0 || 0),
+        (acc, item) => acc + (item.shipping_fee || 0),
+        0
+    );
+    const productsTotal = productsSubtotal + productsShipping;
+
+    const rentalSubtotal = rentalsCart.reduce((acc, item) => {
+        const days = getRentalDays(item.start_date, item.end_date);
+        return acc + item.rental_price_per_day * item.quantity * days;
+    }, 0);
+
+    const rentalShipping = rentalsCart.reduce(
+        (acc, item) => acc + (item.shipping_fee || 0),
         0
     );
 
-    const productsTotal = productsSubtotal + productsShipping;
-
-    // Rental total
-    let rentalSubtotal = 0;
-    let rentalTotal = 0;
-    if (rentalCart) {
-        const days = getRentalDays(rentalCart.start_date, rentalCart.end_date);
-        rentalSubtotal =
-            rentalCart.rental_price_per_day * days * rentalCart.quantity;
-        rentalTotal = rentalSubtotal + (rentalCart.shipping_fee * 1.0 || 0);
-    }
-
-    //  Update rental quantity
-    const updateRentalQuantity = (type) => {
-        if (!rentalCart) return;
-        const newQuantity =
-            type === "increase"
-                ? rentalCart.quantity + 1
-                : Math.max(1, rentalCart.quantity - 1);
-        addRentalToCart({ ...rentalCart, quantity: newQuantity });
-    };
+    const rentalTotal = rentalSubtotal + rentalShipping;
 
     return (
         <>
@@ -76,62 +64,42 @@ function CartPage() {
                     ) : (
                         <>
                             {productsCart.map((item) => (
-                                <div
-                                    key={item.id}
-                                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b py-4 gap-4"
-                                >
+                                <div key={item.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b py-4 gap-4">
                                     <div className="flex items-center space-x-4">
-                                        <img
-                                            src={item.image}
-                                            alt={item.name}
-                                            className="w-20 h-20 object-cover rounded"
-                                        />
+                                        <img src={item.image} alt={item.name} className="w-20 h-20 object-cover rounded" />
                                         <div>
                                             <h4 className="font-semibold">{item.name}</h4>
                                             <p className="text-gray-600">₦{item.price}</p>
                                             {item.shipping_fee > 0 && (
-                                                <p className="text-sm text-gray-500">
-                                                    Shipping: ₦
-                                                    {item.shipping_fee.toLocaleString()}
-                                                </p>
+                                                <p className="text-sm text-gray-500">Shipping: ₦{item.shipping_fee.toLocaleString()}</p>
                                             )}
                                             <p className="text-orange-600 font-semibold">
-                                                Total: ₦
-                                                {(item.price * item.quantity).toFixed(2)}
+                                                Total: ₦{(item.price * item.quantity).toFixed(2)}
                                             </p>
                                         </div>
                                     </div>
-
                                     <div className="flex items-center space-x-3">
-                                        <button
-                                            onClick={() =>
-                                                updateProductQuantity(item.id, "decrease")
-                                            }
-                                            className="p-2 border rounded hover:bg-gray-100"
-                                        >
+                                        <button onClick={() => updateProductQuantity(item.id, "decrease")} className="p-2 border rounded hover:bg-gray-100">
                                             <Minus size={16} />
                                         </button>
                                         <span>{item.quantity}</span>
                                         <button
-                                            onClick={() =>
-                                                updateProductQuantity(item.id, "increase")
-                                            }
-                                            className="p-2 border rounded hover:bg-gray-100"
+                                            onClick={() => {
+                                                if (item.quantity < item.stock) {
+                                                    updateProductQuantity(item.id, "increase");
+                                                }
+                                            }}
+                                            disabled={item.quantity >= item.stock}
+                                            className={`p-2 border rounded ${item.quantity >= item.stock ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100"}`}
                                         >
                                             <Plus size={16} />
                                         </button>
                                     </div>
-
-                                    <button
-                                        onClick={() => removeProductFromCart(item.id)}
-                                        className="text-red-500 hover:text-red-700 self-start sm:self-auto"
-                                    >
+                                    <button onClick={() => removeProductFromCart(item.id)} className="text-red-500 hover:text-red-700 self-start sm:self-auto">
                                         <Trash2 />
                                     </button>
                                 </div>
                             ))}
-
-                            {/* Products Summary */}
                             <div className="mt-6 border-t pt-4">
                                 <p className="flex justify-between mb-2">
                                     <span>Subtotal</span>
@@ -145,10 +113,7 @@ function CartPage() {
                                     <span>Total</span>
                                     <span>₦{productsTotal.toFixed(2)}</span>
                                 </p>
-                                <Link
-                                    to="/checkout/products"
-                                    className="block mt-4 bg-orange-600 text-white text-center py-2 rounded-lg hover:bg-orange-700"
-                                >
+                                <Link to="/checkout/products" className="block mt-4 bg-orange-600 text-white text-center py-2 rounded-lg hover:bg-orange-700">
                                     Checkout Products
                                 </Link>
                             </div>
@@ -156,74 +121,57 @@ function CartPage() {
                     )}
                 </div>
 
-                {/* RENTAL CART */}
+                {/* RENTALS CART */}
                 <div className="bg-white shadow-md rounded-lg p-4 sm:p-6">
-                    <h3 className="text-xl sm:text-2xl font-semibold mb-1">Rental</h3>
-                    <span className="text-sm font-semibold text-orange-500 mb-4">(Note: Only one item can be added to the cart at a time)</span>
+                    <h3 className="text-xl sm:text-2xl font-semibold mb-1">Rentals</h3>
 
-                    {!rentalCart ? (
-                        <p className="text-gray-500">No rental in your cart.</p>
+                    {rentalsCart.length === 0 ? (
+                        <p className="text-gray-500">No rental items in your cart.</p>
                     ) : (
                         <>
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b py-4 gap-4">
-                                <div className="flex items-center space-x-4">
-                                    <img
-                                        src={rentalCart.image}
-                                        alt={rentalCart.name}
-                                        className="w-20 h-20 object-cover rounded"
-                                    />
-                                    <div>
-                                        <h4 className="font-semibold">{rentalCart.name}</h4>
-                                        <p className="text-gray-600">
-                                            ₦{rentalCart.rental_price_per_day}/day ×{" "}
-                                            {getRentalDays(
-                                                rentalCart.start_date,
-                                                rentalCart.end_date
-                                            )}{" "}
-                                            days
-                                        </p>
-                                        <p className="text-sm text-gray-500 flex items-center gap-1">
-                                            <Calendar size={14} /> {rentalCart.start_date} →{" "}
-                                            {rentalCart.end_date}
-                                        </p>
-                                        {rentalCart.shipping_fee > 0 && (
-                                            <p className="text-sm text-gray-500">
-                                                Shipping: ₦
-                                                {rentalCart.shipping_fee.toLocaleString()}
-                                            </p>
-                                        )}
-                                        <p className="text-orange-600 font-semibold">
-                                            Total: ₦{rentalTotal.toFixed(2)}
-                                        </p>
+                            {rentalsCart.map((item) => {
+                                const days = getRentalDays(item.start_date, item.end_date);
+                                const subtotal = item.rental_price_per_day * item.quantity * days;
+                                return (
+                                    <div key={item.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b py-4 gap-4">
+                                        <div className="flex items-center space-x-4">
+                                            <img src={item.image} alt={item.name} className="w-20 h-20 object-cover rounded" />
+                                            <div>
+                                                <h4 className="font-semibold">{item.name}</h4>
+                                                <p className="text-gray-600">₦{item.rental_price_per_day}/day × {days} days</p>
+                                                <p className="text-sm text-gray-500 flex items-center gap-1">
+                                                    <Calendar size={14} /> {item.start_date} → {item.end_date}
+                                                </p>
+                                                <p className="text-orange-600 font-semibold">
+                                                    Total: ₦{subtotal.toFixed(2)}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center space-x-3">
+                                            <button onClick={() => updateRentalQuantity(item.id, "decrease")} className="p-2 border rounded hover:bg-gray-100">
+                                                <Minus size={16} />
+                                            </button>
+                                            <span>{item.quantity}</span>
+                                            <button
+                                                onClick={() => {
+                                                    if (item.quantity < item.stock) {
+                                                        updateRentalQuantity(item.id, "increase");
+                                                    }
+                                                }}
+                                                disabled={item.quantity >= item.stock}
+                                                className={`p-2 border rounded ${item.quantity >= item.stock ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100"}`}
+                                            >
+                                                <Plus size={16} />
+                                            </button>
+
+                                        </div>
+                                        <button onClick={() => removeRentalFromCart(item.id)} className="text-red-500 hover:text-red-700 self-start sm:self-auto">
+                                            <Trash2 />
+                                        </button>
                                     </div>
-                                </div>
+                                );
+                            })}
 
-                                {/* Rental Quantity Controls */}
-                                <div className="flex items-center space-x-3">
-                                    <button
-                                        onClick={() => updateRentalQuantity("decrease")}
-                                        className="p-2 border rounded hover:bg-gray-100"
-                                    >
-                                        <Minus size={16} />
-                                    </button>
-                                    <span>{rentalCart.quantity}</span>
-                                    <button
-                                        onClick={() => updateRentalQuantity("increase")}
-                                        className="p-2 border rounded hover:bg-gray-100"
-                                    >
-                                        <Plus size={16} />
-                                    </button>
-                                </div>
-
-                                <button
-                                    onClick={removeRentalFromCart}
-                                    className="text-red-500 hover:text-red-700 self-start sm:self-auto"
-                                >
-                                    <Trash2 />
-                                </button>
-                            </div>
-
-                            {/* Rental Summary */}
                             <div className="mt-6 border-t pt-4">
                                 <p className="flex justify-between mb-2">
                                     <span>Subtotal</span>
@@ -231,17 +179,14 @@ function CartPage() {
                                 </p>
                                 <p className="flex justify-between mb-2">
                                     <span>Shipping</span>
-                                    <span>₦{(rentalCart.shipping_fee || 0)}</span>
+                                    <span>₦{rentalShipping.toFixed(2)}</span>
                                 </p>
                                 <p className="flex justify-between font-bold text-lg">
                                     <span>Total</span>
                                     <span>₦{rentalTotal.toFixed(2)}</span>
                                 </p>
-                                <Link
-                                    to="/checkout/rental"
-                                    className="block mt-4 bg-orange-600 text-white text-center py-2 rounded-lg hover:bg-orange-700"
-                                >
-                                    Checkout Rental
+                                <Link to="/checkout/rental" className="block mt-4 bg-orange-600 text-white text-center py-2 rounded-lg hover:bg-orange-700">
+                                    Checkout Rentals
                                 </Link>
                             </div>
                         </>

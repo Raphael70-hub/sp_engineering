@@ -1,10 +1,9 @@
 // src/pages/AdminPaymentDetail.jsx
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import axios from "axios";
-import { API_BASE_URL } from "../constants";
 import Sidebar from "../components/Sidebar";
-import {ArrowLeft, CreditCard, FileText, RefreshCcw, X} from "lucide-react";
+import { ArrowLeft, CreditCard, FileText, RefreshCcw, X, RotateCcw } from "lucide-react";
+import api from "../api/index.js";
 
 export default function AdminPaymentDetail() {
     const { id } = useParams();
@@ -13,11 +12,13 @@ export default function AdminPaymentDetail() {
     const [loading, setLoading] = useState(true);
     const [notification, setNotification] = useState("");
     const [isErrorNotification, setIsErrorNotification] = useState(false);
+    const [confirmRefund, setConfirmRefund] = useState(false);
 
     const fetchPayment = async () => {
         try {
             setLoading(true);
-            const res = await axios.get(`${API_BASE_URL}/api/payments/${id}`);
+            // const res = await axios.get(`${API_BASE_URL}/api/payments/${id}`);
+            const res = await api.get(`/api/payments/${id}`);
             setPayment(res.data);
         } catch (err) {
             console.error(err);
@@ -38,32 +39,66 @@ export default function AdminPaymentDetail() {
         setTimeout(() => setNotification(""), 3000);
     };
 
-    const downloadInvoice = () => {
+    const downloadInvoice = async () => {
         if (!payment) return;
-        const blob = new Blob(
-            [
-                `Invoice\n\nPayment ID: ${payment.id}\nOrder Ref: ${payment.order?.ref}\nAmount: ₦${payment.amount}\nStatus: ${payment.status}\nProvider: ${payment.provider}\nTransaction Ref: ${payment.transaction_ref}\nDate: ${new Date(payment.created_at).toLocaleString()}`
-            ],
-            { type: "text/plain" }
-        );
 
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `invoice_${payment.id}.txt`;
-        link.click();
-    };
-
-    const reconcilePayment = async () => {
         try {
-            await axios.post(`${API_BASE_URL}/api/payments/${id}/reconcile`);
-            showNotification("Payment reconciled successfully");
-            fetchPayment();
+            // const response = await fetch(`${API_BASE_URL}/api/payments/${payment.id}/invoice`, {
+            //     method: "GET",
+            //     headers: {
+            //         "Accept": "application/pdf",
+            //     },
+            // });
+            const response = await api.get(`/api/payments/${payment.id}/invoice`);
+
+            if (!response.ok) {
+                throw new Error("Failed to download invoice");
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `invoice_${payment.id}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            window.URL.revokeObjectURL(url);
         } catch (err) {
-            console.error(err);
-            showNotification("Failed to reconcile payment", true);
+            console.error("Error downloading invoice:", err);
+            alert("Failed to download invoice. Please try again.");
         }
     };
 
+    // const reconcilePayment = async () => {
+    //     try {
+    //         await axios.post(`${API_BASE_URL}/api/payments/${id}/reconcile`);
+    //         showNotification("Payment reconciled successfully");
+    //         fetchPayment();
+    //     } catch (err) {
+    //         console.error(err);
+    //         showNotification("Failed to reconcile payment", true);
+    //     }
+    // };
+
+    const refundPayment = async () => {
+        setLoading(true);
+        try {
+            // await axios.post(`${API_BASE_URL}/api/payments/${id}/refund`);
+            await api.post(`/api/payments/${id}/refund`);
+            showNotification("Payment refunded successfully");
+            setConfirmRefund(false);
+            fetchPayment();
+        } catch (err) {
+            console.error(err);
+            showNotification("Failed to refund payment", true);
+        }
+        finally {
+            setLoading(false);
+        }
+    };
 
     if (loading || !payment) {
         return (
@@ -103,75 +138,32 @@ export default function AdminPaymentDetail() {
                         <CreditCard className="text-orange-500" /> Payment Details
                     </h1>
                     <p className="text-gray-600">Provider: {payment.provider}</p>
-                    <p className="text-gray-600">
-                        Transaction Ref: {payment.transaction_ref}
+                    <p className="text-gray-600">Transaction Ref: {payment.transaction_ref}</p>
+                    <p className="text-gray-600">Order Ref: {payment.order_ref}</p>
+                    <p className="text-gray-600">Refunded Amount: ₦{parseFloat(payment.refunded_amount).toLocaleString()}</p>
+                    <p className="text-lg font-semibold mt-2">
+                        Amount: ₦{parseFloat(payment.amount).toLocaleString()}
                     </p>
                     <p className="text-lg font-semibold mt-2">
-                        ₦{parseFloat(payment.amount).toLocaleString()}
-                    </p>
-                    <span
+                        Status: <span
                         className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-medium ${
-                            payment.status === "completed"
+                            payment.status === "success"
                                 ? "bg-green-100 text-green-600"
-                                : "bg-yellow-100 text-yellow-600"
+                                : payment.status === "pending"
+                                    ? "bg-yellow-100 text-yellow-600"
+                                    : payment.status === "refunded"
+                                        ? "bg-blue-100 text-blue-600"
+                                        : "bg-red-100 text-red-600"
                         }`}
                     >
-            {payment.status}
-          </span>
+                        {payment.status}
+                    </span>
+                    </p>
+
                 </div>
 
-                {/* Order Information */}
-                {payment.order && (
-                    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                        <h2 className="text-lg font-semibold mb-3">Order Information</h2>
-                        <p>
-                            <span className="font-medium">Order Ref:</span>{" "}
-                            {payment.order.ref}
-                        </p>
-                        <p>
-                            <span className="font-medium">Status:</span>{" "}
-                            <span
-                                className={`px-2 py-1 text-xs rounded-lg ${
-                                    payment.order.status === "pending"
-                                        ? "bg-yellow-100 text-yellow-700"
-                                        : payment.order.status === "processing"
-                                            ? "bg-purple-100 text-purple-700"
-                                            : payment.order.status === "shipped"
-                                                ? "bg-blue-100 text-blue-700"
-                                                : payment.order.status === "completed"
-                                                    ? "bg-green-100 text-green-700"
-                                                    : "bg-red-100 text-red-700"
-                                }`}
-                            >
-                        {payment.order.status}
-                      </span>
-                        </p>
-                        <p>
-                            <span className="font-medium">Total Amount:</span> ₦
-                            {parseFloat(payment.order.total_amount).toLocaleString()}
-                        </p>
-                        <p>
-                            <span className="font-medium">Created At:</span>{" "}
-                            {new Date(payment.order.created_at).toLocaleString()}
-                        </p>
-
-                        {/* Order Items */}
-                        <div className="mt-4">
-                            <h3 className="font-medium mb-2">Items</h3>
-                            <ul className="list-disc list-inside text-gray-700 space-y-1">
-                                {payment.order.items.map((item, i) => (
-                                    <li key={i}>
-                                        {item.product_name} — {item.quantity} × ₦
-                                        {parseFloat(item.price).toLocaleString()}
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    </div>
-                )}
-
                 {/* Actions */}
-                <div className="flex gap-3">
+                <div className="flex gap-3 flex-wrap">
                     <button
                         onClick={downloadInvoice}
                         className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg flex items-center gap-2"
@@ -179,16 +171,51 @@ export default function AdminPaymentDetail() {
                         <FileText size={16} /> Download Invoice
                     </button>
 
-                    {payment.status != "completed" && (
+                    {/*{payment.status !== "completed" && (*/}
+                    {/*    <button*/}
+                    {/*        onClick={reconcilePayment}*/}
+                    {/*        className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg flex items-center gap-2"*/}
+                    {/*    >*/}
+                    {/*        <RefreshCcw size={16} /> Reconcile*/}
+                    {/*    </button>*/}
+                    {/*)}*/}
+
+                    {payment.status === "success" && (
                         <button
-                            onClick={reconcilePayment}
-                            className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg flex items-center gap-2"
+                            onClick={() => setConfirmRefund(true)}
+                            className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center gap-2"
                         >
-                            <RefreshCcw size={16} /> Reconcile
+                            <RotateCcw size={16} /> Refund
                         </button>
                     )}
-
                 </div>
+
+                {/* Refund Confirmation Modal */}
+                {confirmRefund && (
+                    <div className="fixed inset-0 flex items-center justify-center bg-black/30 bg-opacity-50 z-50">
+                        <div className="bg-white rounded-lg shadow-lg p-6 w-96">
+                            <h2 className="text-lg font-bold mb-4">Confirm Refund</h2>
+                            <p className="text-gray-600 mb-6">
+                                Are you sure you want to refund this payment of ₦
+                                {parseFloat(payment.amount).toLocaleString()}?
+                            </p>
+                            <div className="flex justify-end gap-3">
+                                <button
+                                    onClick={() => setConfirmRefund(false)}
+                                    className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg flex items-center gap-2"
+                                >
+                                    <X size={16} /> Cancel
+                                </button>
+                                <button
+                                    onClick={refundPayment}
+                                    className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center gap-2"
+                                >
+                                    <RotateCcw size={16} /> Confirm Refund
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

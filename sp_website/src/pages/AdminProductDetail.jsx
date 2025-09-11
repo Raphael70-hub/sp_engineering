@@ -2,9 +2,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import {ArrowLeft, Edit, Trash2, Package, X} from "lucide-react";
 import Sidebar from "../components/Sidebar.jsx";
 import { useState, useEffect } from "react";
-import axios from "axios";
-import { API_BASE_URL } from "../constants/index.js";
 import ProductForm from "../components/ProductForm.jsx";
+import api from "../api/index.js";
+import {API_BASE_URL} from "../constants/index.js";
 
 export default function AdminProductDetail() {
     const { id } = useParams();
@@ -18,7 +18,8 @@ export default function AdminProductDetail() {
     const fetchProduct = async () => {
         try {
             setLoading(true);
-            const res = await axios.get(`${API_BASE_URL}/api/products/${id}`);
+            // const res = await axios.get(`${API_BASE_URL}/api/products/${id}`);
+            const res = await api.get(`/api/products/${id}`);
             setProduct(res.data);
         } catch (err) {
             console.error(err);
@@ -37,8 +38,14 @@ export default function AdminProductDetail() {
         try {
             setLoading(true);
             let response;
-            response = await axios.put(
-                `${API_BASE_URL}/api/products/${product.id}`,
+            // response = await axios.put(
+            //     `${API_BASE_URL}/api/products/${product.id}`,
+            //     formData,
+            //     { headers: { "Content-Type": "multipart/form-data" } }
+            // );
+
+            response = await api.put(
+                `/api/products/${product.id}`,
                 formData,
                 { headers: { "Content-Type": "multipart/form-data" } }
             );
@@ -69,7 +76,8 @@ export default function AdminProductDetail() {
         if (!confirmDelete) return;
         try {
             setLoading(true);
-            let response = await axios.delete(`${API_BASE_URL}/api/products/${id}`);
+            // let response = await axios.delete(`${API_BASE_URL}/api/products/${id}`);
+            let response = await api.delete(`/api/products/${id}`);
             const message = response?.data?.message ? response.data.message:"Product deleted successfully"
             showNotification(message);
             navigate(-1);
@@ -131,6 +139,7 @@ export default function AdminProductDetail() {
                             <Package className="text-orange-500" /> {product.name}
                         </h1>
                         <p className="text-gray-600">Category: {product.category_name || "-"}</p>
+                        <p className="text-gray-600">Product Ref: {product.ref || "-"}</p>
                         <p className="text-lg font-semibold mt-1">
                             {product.product_type === "rental"
                                 ? `₦${product.rental_price_per_day}/day`

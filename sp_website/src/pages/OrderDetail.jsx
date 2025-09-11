@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import PlainNavBar from "../components/PlainNavBar.jsx";
 import Footer from "../sections/Footer.jsx";
-import axios from "axios";
 import { API_BASE_URL } from "../constants/index.js";
+import api from "../api/index.js";
 
 export default function OrderDetail() {
     const { id } = useParams();
@@ -16,7 +16,7 @@ export default function OrderDetail() {
             setLoading(true);
             setError(null);
             try {
-                const response = await axios.get(`${API_BASE_URL}/api/orders/${id}`);
+                const response = await api.get(`/api/orders/${id}`);
                 setOrder(response.data);
             } catch (err) {
                 setError("Failed to load order details. Please try again.");

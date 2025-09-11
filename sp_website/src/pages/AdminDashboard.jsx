@@ -1,6 +1,5 @@
 // src/pages/AdminDashboard.jsx
 import { useEffect, useState } from "react";
-import axios from "axios";
 import {
     BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer
 } from "recharts";
@@ -9,6 +8,7 @@ import {
 } from "lucide-react";
 import Sidebar from "../components/Sidebar.jsx";
 import { API_BASE_URL } from "../constants";
+import api from "../api/index.js";
 
 export default function AdminDashboard() {
     const [dashboard, setDashboard] = useState(null);
@@ -17,7 +17,7 @@ export default function AdminDashboard() {
     const fetchDashboard = async () => {
         try {
             setLoading(true);
-            const res = await axios.get(`${API_BASE_URL}/api/dashboard/`);
+            const res = await api.get(`/api/dashboard/`);
             setDashboard(res.data);
         } catch (err) {
             console.error("Failed to fetch dashboard:", err);

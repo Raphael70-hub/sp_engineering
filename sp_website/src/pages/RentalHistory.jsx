@@ -1,13 +1,12 @@
+// src/pages/RentalHistory.jsx
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import PlainNavBar from "../components/PlainNavBar.jsx";
 import Footer from "../sections/Footer.jsx";
 import { API_BASE_URL } from "../constants/index.js";
-import api, {getCurrentUser} from "../api";
+import api, {getCurrentUser} from "../api/index.js";
 
-export default function OrderHistory() {
-
-    // const [user, setUser] = useState(null);
+export default function RentalHistory() {
 
     const loadUser = async () => {
         try {
@@ -18,7 +17,7 @@ export default function OrderHistory() {
         }
     };
 
-    const [orders, setOrders] = useState([]);
+    const [rentals, setRentals] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -33,7 +32,7 @@ export default function OrderHistory() {
     const [endDate, setEndDate] = useState("");
 
     useEffect(() => {
-        const fetchOrders = async () => {
+        const fetchRentals = async () => {
             setLoading(true);
             setError(null);
 
@@ -41,19 +40,19 @@ export default function OrderHistory() {
 
             try {
                 const response = await api.get(
-                    `/api/orders?user_id=${user.id}&page=${page}&limit=${limit}&status=${status}&startDate=${startDate}&endDate=${endDate}`
+                    `/api/rentals?user_id=${user.id}&page=${page}&limit=${limit}&status=${status}&startDate=${startDate}&endDate=${endDate}`
                 );
 
-                setOrders(response.data.orders || []);
+                setRentals(response.data.bookings || []);
                 setTotal(response.data.total || 0);
             } catch (err) {
-                setError("Failed to fetch orders. Please try again.");
+                setError("Failed to fetch rentals. Please try again.");
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchOrders();
+        fetchRentals();
     }, [page, status, startDate, endDate]);
 
     const totalPages = Math.ceil(total / limit);
@@ -62,7 +61,7 @@ export default function OrderHistory() {
         <>
             <PlainNavBar />
             <div className="container mx-auto px-4 py-10">
-                <h2 className="text-3xl font-bold mb-6">Order History</h2>
+                <h2 className="text-3xl font-bold mb-6">Rental History</h2>
 
                 {/* Filters */}
                 <div className="bg-white shadow-md rounded-lg p-4 mb-6 flex flex-wrap gap-4 items-end">
@@ -75,11 +74,9 @@ export default function OrderHistory() {
                         >
                             <option value="">All</option>
                             <option value="pending">Pending</option>
-                            <option value="processing">Processing</option>
                             <option value="confirmed">Confirmed</option>
-                            <option value="shipped">Shipped</option>
-                            <option value="completed">Completed</option>
                             <option value="cancelled">Cancelled</option>
+                            <option value="completed">Completed</option>
                         </select>
                     </div>
 
@@ -105,7 +102,7 @@ export default function OrderHistory() {
 
                     <button
                         onClick={() => {
-                            setPage(1); // reset to first page when filters change
+                            setPage(1); // reset page on filter change
                         }}
                         className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
                     >
@@ -117,7 +114,7 @@ export default function OrderHistory() {
                 {loading && (
                     <div className="flex justify-center items-center py-10">
                         <div className="w-10 h-10 border-4 border-orange-600 border-t-transparent rounded-full animate-spin"></div>
-                        <span className="ml-3 text-gray-700 font-medium">Loading orders...</span>
+                        <span className="ml-3 text-gray-700 font-medium">Loading rentals...</span>
                     </div>
                 )}
 
@@ -125,34 +122,54 @@ export default function OrderHistory() {
 
                 {!loading && !error && (
                     <>
-                        {orders.length === 0 ? (
-                            <p>You have no orders matching the filters.</p>
+                        {rentals.length === 0 ? (
+                            <p>You have no rentals matching the filters.</p>
                         ) : (
                             <div className="space-y-4">
-                                {orders.map((order) => (
+                                {rentals.map((rental) => (
                                     <div
-                                        key={order.id}
+                                        key={rental.id}
                                         className="p-5 border rounded-xl flex justify-between items-center"
                                     >
                                         <div>
                                             <p className="font-semibold">
-                                                Order {order.ref}
+                                                Rental {rental.ref}
                                             </p>
                                             <p className="text-sm text-gray-600">
-                                                Date:{" "}
-                                                {new Date(order.created_at).toLocaleDateString()} | Status:{" "}
-                                                {order.status}
+                                                Dates:{" "}
+                                                {(() => {
+                                                    // Find earliest start date and latest end date among all items
+                                                    const startDates = rental.items.map(i => new Date(i.start_date));
+                                                    const endDates = rental.items.map(i => new Date(i.end_date));
+                                                    const earliest = new Date(Math.min(...startDates));
+                                                    const latest = new Date(Math.max(...endDates));
+                                                    return `${earliest.toLocaleDateString()} - ${latest.toLocaleDateString()}`;
+                                                })()} | Status:{" "}
+                                                <span>
+                                                    <strong>Status:</strong> <span
+                                                    className={`px-2 py-1 text-xs rounded-lg ${
+                                                        rental.status === "pending"
+                                                            ? "bg-yellow-100 text-yellow-700"
+                                                            : rental.status === "confirmed"
+                                                                ? "bg-blue-100 text-blue-700"
+                                                                : rental.status === "completed"
+                                                                    ? "bg-green-100 text-green-700"
+                                                                    : "bg-red-100 text-red-700"
+                                                    }`}
+                                                >
+                                                        {rental.status}
+                                                    </span>
+                                                </span>
                                             </p>
                                             <p className="text-lg font-bold">
-                                                ₦{Number(order.total_amount).toLocaleString()}
+                                                ₦{Number(rental.total_amount).toLocaleString()}
                                             </p>
                                             <p className="text-sm text-gray-500">
-                                                Customer: {order.customer_name} (
-                                                {order.customer_email})
+                                                Rented by: {rental.user_name} ({rental.user_email})
                                             </p>
                                         </div>
                                         <Link
-                                            to={`/orders/${order.id}`}
+                                            to={`/rentals/${rental.id}`}
                                             className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
                                         >
                                             View Details

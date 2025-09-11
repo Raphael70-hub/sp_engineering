@@ -11,10 +11,11 @@ import {
     ChevronRight,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import Sidebar from "../components/Sidebar.jsx";
 import ProductForm from "../components/ProductForm.jsx";
 import { API_BASE_URL } from "../constants/index.js";
+import ConfirmModal from "../components/ConfirmModal.jsx";
+import api from "../api/index.js";
 
 export default function AdminProducts() {
     const [products, setProducts] = useState([]);
@@ -23,6 +24,8 @@ export default function AdminProducts() {
     const [loading, setLoading] = useState(true);
     const [notification, setNotification] = useState("");
     const [isErrorNotification, setIsErrorNotification] = useState(false);
+    // const [showModal, setShowModal] = useState(false);
+    // const [deleteId, setDeleteId] = useState(0);
 
     const [categories, setCategories] = useState([]);
 
@@ -35,7 +38,7 @@ export default function AdminProducts() {
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const res = await axios.get(`${API_BASE_URL}/api/categories/all`);
+                const res = await api.get(`/api/categories/all`);
                 setCategories(res.data.categories || []);
             } catch (err) {
                 console.error(err);
@@ -64,7 +67,7 @@ export default function AdminProducts() {
                 search: filterSearch || undefined,
             };
 
-            const res = await axios.get(`${API_BASE_URL}/api/products`, { params });
+            const res = await api.get(`/api/products`, { params });
             setProducts(res.data.products || []);
         } catch (err) {
             console.error(err);
@@ -101,8 +104,13 @@ export default function AdminProducts() {
             let response;
             if (editing) {
                 // Update product
-                response = await axios.put(
-                    `${API_BASE_URL}/api/products/${editing.id}`,
+                // response = await axios.put(
+                //     `${API_BASE_URL}/api/products/${editing.id}`,
+                //     formData,
+                //     { headers: { "Content-Type": "multipart/form-data" } }
+                // );
+                response = await api.put(
+                    `/api/products/${editing.id}`,
                     formData,
                     { headers: { "Content-Type": "multipart/form-data" } }
                 );
@@ -111,7 +119,11 @@ export default function AdminProducts() {
                 showNotification(successMessage);
             } else {
                 // Create product
-                response = await axios.post(`${API_BASE_URL}/api/products`, formData, {
+                // response = await axios.post(`${API_BASE_URL}/api/products`, formData, {
+                //     headers: { "Content-Type": "multipart/form-data" },
+                // });
+
+                response = await api.post(`/api/products`, formData, {
                     headers: { "Content-Type": "multipart/form-data" },
                 });
 
@@ -137,6 +149,11 @@ export default function AdminProducts() {
         }
     };
 
+    // const handleDelete = (id) => {
+    //     setShowModal(true);
+    //     setDeleteId(id);
+    // }
+
     const handleDelete = async (id) => {
         const confirmDelete = window.confirm(
             "Are you sure you want to delete this product?"
@@ -144,7 +161,8 @@ export default function AdminProducts() {
         if (!confirmDelete) return;
         try {
             setLoading(true);
-            let response = await axios.delete(`${API_BASE_URL}/api/products/${id}`);
+            // let response = await axios.delete(`${API_BASE_URL}/api/products/${id}`);
+            let response = await api.delete(`/api/products/${id}`);
             const message = response?.data?.message ? response.data.message:"Product deleted successfully"
             showNotification(message);
             fetchProducts();
@@ -410,6 +428,20 @@ export default function AdminProducts() {
                     </div>
                 </div>
             )}
+
+
+            {/*/!* Custom Confirmation Modal *!/*/}
+            {/*{showModal && (*/}
+            {/*    <ConfirmModal*/}
+            {/*        title={"Confirm Delete"}*/}
+            {/*        message={"Are you sure you want to delete this product?"}*/}
+            {/*        onConfirm={() => handleConfirmDelete(deleteId)}*/}
+            {/*        onCancel={() => {*/}
+            {/*            setShowModal(false);*/}
+            {/*            setDeleteId(0);*/}
+            {/*        }}*/}
+            {/*    />*/}
+            {/*)}*/}
         </div>
     );
 }

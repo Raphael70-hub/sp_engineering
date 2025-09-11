@@ -1,15 +1,36 @@
+import { useEffect, useState } from "react";
 import PlainNavBar from "../components/PlainNavBar.jsx";
 import Footer from "../sections/Footer.jsx";
 import { Link } from "react-router-dom";
-import {User} from "lucide-react";
+import { getCurrentUser } from "../api";
 
 export default function ProfilePage() {
-    const user = {
-        name: "John Doe",
-        email: "john@example.com",
-        phone: "+1 555-123-4567",
-        address: "123 Industrial Ave, Lagos, Nigeria",
-    };
+    const [user, setUser] = useState(null);
+
+    useEffect(() => {
+        const loadUser = async () => {
+            try {
+                const data = await getCurrentUser();
+                setUser(data);
+            } catch (err) {
+                console.error("Failed to load user:", err);
+            }
+        };
+        loadUser();
+    }, []);
+
+
+    if (!user) {
+        return (
+            <>
+                <PlainNavBar />
+                <div className="flex items-center justify-center min-h-[60vh]">
+                    <p className="text-gray-500">Loading profile...</p>
+                </div>
+                <Footer />
+            </>
+        );
+    }
 
     return (
         <>
@@ -23,7 +44,9 @@ export default function ProfilePage() {
                         <h3 className="text-xl font-semibold mb-2">Personal Information</h3>
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">Name</label>
+                                <label className="block text-sm font-medium text-gray-700">
+                                    Name
+                                </label>
                                 <input
                                     type="text"
                                     value={user.name}
@@ -33,7 +56,9 @@ export default function ProfilePage() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">Email</label>
+                                <label className="block text-sm font-medium text-gray-700">
+                                    Email
+                                </label>
                                 <input
                                     type="email"
                                     value={user.email}
@@ -41,34 +66,13 @@ export default function ProfilePage() {
                                     className="mt-1 block w-full rounded-lg p-2 border-gray-300 shadow-sm bg-gray-100 cursor-not-allowed"
                                 />
                             </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Phone</label>
-                                <input
-                                    type="text"
-                                    value={user.phone}
-                                    disabled
-                                    className="mt-1 block w-full rounded-lg p-2 border-gray-300 shadow-sm bg-gray-100 cursor-not-allowed"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Address</label>
-                                <input
-                                    type="text"
-                                    value={user.address}
-                                    disabled
-                                    className="mt-1 block w-full rounded-lg p-2 border-gray-300 shadow-sm bg-gray-100 cursor-not-allowed"
-                                />
-                            </div>
                         </div>
-
                     </div>
 
                     {/* Links */}
                     <div className="space-y-4">
                         <Link
-                            to="/reset-password"
+                            to="/forgot-password"
                             className="block text-orange-600 font-medium hover:underline"
                         >
                             🔑 Reset Password
@@ -79,6 +83,13 @@ export default function ProfilePage() {
                             className="block text-orange-600 font-medium hover:underline"
                         >
                             📦 View Order History
+                        </Link>
+
+                        <Link
+                            to="/rentals"
+                            className="block text-orange-600 font-medium hover:underline"
+                        >
+                            📦 View Rental History
                         </Link>
 
                         <Link
