@@ -13,6 +13,9 @@ export default defineConfig({
     react(),
     tailwindcss()
   ],
+  css: {
+    transformer: 'postcss' // disable lightningcss, fallback to postcss
+  },
   resolve: {
     alias: {
       react: path.resolve(__dirname, 'node_modules/react'),
