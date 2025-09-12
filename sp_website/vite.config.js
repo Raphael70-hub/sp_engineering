@@ -13,6 +13,9 @@ export default defineConfig({
     react(),
     tailwindcss()
   ],
+  css: {
+    transformer: 'postcss' // 👈 explicitly disable lightningcss
+  },
   base: '/',
   resolve: {
     alias: {
