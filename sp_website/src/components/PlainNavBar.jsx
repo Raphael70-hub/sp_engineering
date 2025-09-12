@@ -20,18 +20,18 @@ const PlainNavBar = () => {
             }
         };
         loadUser();
-    }, []);
+    }, [user]);
 
-    if (!user) {
-        return (
-            <>
-                <div className="flex items-center justify-center min-h-[60vh]">
-                    <p className="text-gray-500">Loading ...</p>
-                </div>
-                <Footer />
-            </>
-        );
-    }
+    // if (!user) {
+    //     return (
+    //         <>
+    //             <div className="flex items-center justify-center min-h-[60vh]">
+    //                 <p className="text-gray-500">Loading ...</p>
+    //             </div>
+    //             <Footer />
+    //         </>
+    //     );
+    // }
 
     return (
         <div
@@ -72,7 +72,7 @@ const PlainNavBar = () => {
                         Cart
                     </NavLink>
                     <AccountMenu/>
-                    {user.role === "admin" && (
+                    {user && user.role === "admin" && (
                         <NavLink
                             to="/admin/dashboard"
                             className={({ isActive }) =>
