@@ -1,5 +1,5 @@
 const navImg = "/images/navImg.jpg";
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL = "https://sp-engineering-backend.onrender.com";
 
 
 export {
