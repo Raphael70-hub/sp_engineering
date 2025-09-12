@@ -13,6 +13,9 @@ export default defineConfig({
     react(),
     tailwindcss()
   ],
+  css: {
+    transformer: 'postcss' // disable lightningcss, fallback to postcss
+  },
   build: {
     outDir: 'build', // Ensure Render serves the correct directory
   },
