@@ -30,13 +30,16 @@ api.interceptors.response.use(
 
 export const getCurrentUser = async () => {
     const token = localStorage.getItem("token");
-    const res = await axios.get("/api/users/me",
-        {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        });
-    return res.data;
+    if(token) {
+        const res = await axios.get(`${API_BASE_URL}/api/users/me`,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+        return res.data;
+    }
+    else return null;
 };
 
 
