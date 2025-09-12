@@ -10,6 +10,7 @@ import api, {getCurrentUser} from "../api/index.js";
 function CheckoutRentalPage() {
     const { rentalsCart, clearRentalCart } = useCart();
     const [shippingAddress, setShippingAddress] = useState("");
+    const [phoneNumber, setPhoneNumber] = useState("");
     const [showModal, setShowModal] = useState(false);
     const [loading, setLoading] = useState(false);
 
@@ -78,6 +79,7 @@ function CheckoutRentalPage() {
             type: "rental",
             status: "pending",
             shipping_address: shippingAddress,
+            phone_number: phoneNumber,
             items,
         };
 
@@ -195,6 +197,15 @@ function CheckoutRentalPage() {
                                         placeholder="Shipping Address"
                                         value={shippingAddress}
                                         onChange={(e) => setShippingAddress(e.target.value)}
+                                        className="border p-3 rounded-lg col-span-2"
+                                        required
+                                    />
+
+                                    <input
+                                        type="text"
+                                        placeholder="Phone Number"
+                                        value={phoneNumber}
+                                        onChange={(e) => setPhoneNumber(e.target.value)}
                                         className="border p-3 rounded-lg col-span-2"
                                         required
                                     />

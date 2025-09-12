@@ -118,7 +118,8 @@ export default function AdminRentalDetail() {
                     <p>
                         <span className="font-medium">User:</span> {rental.user_name} ({rental.user_email})
                     </p>
-                    {rental.user_phone && <p>Phone: {rental.user_phone}</p>}
+                    {rental.phone_number && <p>Phone: {rental.phone_number}</p>}
+                    {rental.shipping_address && <p>Shipping Address: {rental.shipping_address}</p>}
 
                     {/* Aggregate Dates for all items */}
                     {rental.items?.length ? (

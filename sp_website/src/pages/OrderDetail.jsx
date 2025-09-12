@@ -55,6 +55,12 @@ export default function OrderDetail() {
                             <p className="text-sm text-gray-600">
                                 Customer: {order.customer_name} ({order.customer_email})
                             </p>
+                            <p className="text-sm text-gray-600">
+                                Phone Number: {order.phone_number}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                                Shipping Address: {order.shipping_address}
+                            </p>
                         </div>
 
                         <h3 className="text-xl font-semibold mb-4">Items</h3>

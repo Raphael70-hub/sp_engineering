@@ -10,6 +10,7 @@ import api, {getCurrentUser} from "../api/index.js";
 function CheckoutProductsPage() {
     const { productsCart, clearProductsCart } = useCart();
     const [shippingAddress, setShippingAddress] = useState("");
+    const [phoneNumber, setPhoneNumber] = useState("");
     const [showModal, setShowModal] = useState(false);
     const [loading, setLoading] = useState(false);
 
@@ -67,6 +68,7 @@ function CheckoutProductsPage() {
             created_by: user.id,
             status: "pending",
             shipping_address: shippingAddress,
+            phone_number: phoneNumber,
             email: user.email,
             type: "product",
         };
@@ -173,6 +175,15 @@ function CheckoutProductsPage() {
                                         placeholder="Shipping Address"
                                         value={shippingAddress}
                                         onChange={(e) => setShippingAddress(e.target.value)}
+                                        className="border p-3 rounded-lg col-span-2"
+                                        required
+                                    />
+
+                                    <input
+                                        type="text"
+                                        placeholder="Phone Number"
+                                        value={phoneNumber}
+                                        onChange={(e) => setPhoneNumber(e.target.value)}
                                         className="border p-3 rounded-lg col-span-2"
                                         required
                                     />

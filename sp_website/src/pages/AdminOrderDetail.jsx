@@ -164,7 +164,7 @@ export default function AdminOrderDetail() {
                         <h2 className="font-bold text-lg mb-2">Customer Info</h2>
                         <p><strong>Name:</strong> {order.customer_name}</p>
                         <p><strong>Email:</strong> {order.customer_email}</p>
-                        {order.customer_phone && <p><strong>Phone:</strong> {order.customer_phone}</p>}
+                        {order.phone_number && <p><strong>Phone:</strong> {order.phone_number}</p>}
                         <p><strong>Shipping Address:</strong> {order.shipping_address}</p>
                         <p><strong>Date:</strong> {new Date(order.created_at).toLocaleDateString()}</p>
                         <p><strong>Status:</strong> <span

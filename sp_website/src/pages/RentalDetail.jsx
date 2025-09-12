@@ -79,6 +79,12 @@ export default function RentalDetail() {
                             <p className="font-bold">
                                 Total: ₦{Number(rental.total_amount).toLocaleString()}
                             </p>
+                            <p className="text-sm text-gray-600">
+                                Phone Number: {rental.phone_number}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                                Shipping Address: {rental.shipping_address}
+                            </p>
 
                         </div>
 
