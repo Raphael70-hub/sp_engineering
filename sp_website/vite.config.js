@@ -19,6 +19,7 @@ export default defineConfig({
     rollupOptions: {
       external: ['lightningcss'], // ⛔ ignore native module
     },
+    outDir: 'build',
   },
   base: '/',
   resolve: {
