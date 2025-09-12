@@ -9,8 +9,8 @@
     "lint": "eslint .",
     "preview": "vite preview"
   },
-  "overrides": {
-    "lightningcss": "0.0.0"
+  "engines": {
+    "node": "20.x"
   },
   "dependencies": {
     "@radix-ui/react-dropdown-menu": "^2.1.16",
