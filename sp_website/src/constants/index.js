@@ -1,5 +1,5 @@
 const navImg = "/images/navImg.jpg";
-const API_BASE_URL = "https://sp-engineering-backend.onrender.com";
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 
 export {
