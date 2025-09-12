@@ -14,13 +14,9 @@ export default defineConfig({
     tailwindcss()
   ],
   build: {
-    cssMinify: 'esbuild',   // ✅ use esbuild for CSS
-    minify: 'esbuild',      // ✅ ensure js+css both go through esbuild
+    outDir: 'build', // Ensure Render serves the correct directory
   },
-  css: {
-    // ✅ force PostCSS pipeline only, no lightningcss
-    postcss: {}
-  },
+  base: '/',
   resolve: {
     alias: {
       react: path.resolve(__dirname, 'node_modules/react'),
