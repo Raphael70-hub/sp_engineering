@@ -14,7 +14,12 @@ export default defineConfig({
     tailwindcss()
   ],
   build: {
-    cssMinify: 'esbuild', // ✅ disable lightningcss, use esbuild instead
+    cssMinify: 'esbuild',   // ✅ use esbuild for CSS
+    minify: 'esbuild',      // ✅ ensure js+css both go through esbuild
+  },
+  css: {
+    // ✅ force PostCSS pipeline only, no lightningcss
+    postcss: {}
   },
   resolve: {
     alias: {
