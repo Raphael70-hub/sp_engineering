@@ -13,14 +13,14 @@ export default defineConfig({
     react(),
     tailwindcss()
   ],
-  css: {
-    transformer: 'postcss' // 👈 explicitly disable lightningcss
-  },
-  build: {
-    rollupOptions: {
-      external: ['lightningcss'], // ⛔ ignore native module
-    },
-  },
+  // css: {
+  //   transformer: 'postcss' // 👈 explicitly disable lightningcss
+  // },
+  // build: {
+  //   rollupOptions: {
+  //     external: ['lightningcss'], // ⛔ ignore native module
+  //   },
+  // },
   base: '/',
   resolve: {
     alias: {
