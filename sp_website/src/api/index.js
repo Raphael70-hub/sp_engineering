@@ -29,7 +29,13 @@ api.interceptors.response.use(
 );
 
 export const getCurrentUser = async () => {
-    const res = await api.get("/api/users/me");
+    const token = localStorage.getItem("token");
+    const res = await axios.get("/api/users/me",
+        {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
     return res.data;
 };
 
