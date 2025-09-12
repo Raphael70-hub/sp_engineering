@@ -16,6 +16,11 @@ export default defineConfig({
   css: {
     transformer: 'postcss' // 👈 explicitly disable lightningcss
   },
+  build: {
+    rollupOptions: {
+      external: ['lightningcss'], // ⛔ ignore native module
+    },
+  },
   base: '/',
   resolve: {
     alias: {
