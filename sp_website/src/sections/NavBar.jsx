@@ -189,7 +189,7 @@ const NavBar = ({ title, subtitle, showButton = true }) => {
               </NavLink>
                 <AccountMenu/>
 
-              {user.role === "admin" && (
+              {user && user.role === "admin" && (
                   <NavLink
                       to="/admin/dashboard"
                       className={({ isActive }) =>

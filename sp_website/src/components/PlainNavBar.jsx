@@ -126,7 +126,7 @@ const PlainNavBar = () => {
                         Cart
                     </NavLink>
                     <AccountMenu/>
-                    {user.role === "admin" && (
+                    {user && user.role === "admin" && (
                         <NavLink
                             to="/admin/dashboard"
                             className={({ isActive }) =>
