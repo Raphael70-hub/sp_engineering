@@ -1,6 +1,6 @@
 // src/pages/VerifyEmail.jsx
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import {Link, useParams} from "react-router-dom";
 import axios from "axios";
 import {API_BASE_URL} from "../constants/index.js";
 
