@@ -1,22 +1,27 @@
+import {Link} from "react-router-dom";
+
 const HighlightServices = () => {
     const services = [
         {
-            title: "Building Materials",
+            title: "Smart Build Online Store",
             desc: "High-quality cement, steel, and aggregates delivered on time.",
             img: "/images/materials.jpg",
-            price: "$50",
+            link: "/products",
+            // price: "$50",
         },
         {
             title: "Equipment Hire",
             desc: "Affordable heavy equipment rental for construction projects.",
             img: "/images/equipment.jpg",
-            price: "$150",
+            link: "/services",
+            // price: "$150",
         },
         {
-            title: "Engineering Services",
+            title: "Construction Project Management",
             desc: "Expert consultation and project management solutions.",
             img: "/images/engineering.jpg",
-            price: "$200",
+            link: "/contact",
+            // price: "$200",
         },
     ];
 
@@ -51,9 +56,10 @@ const HighlightServices = () => {
                                     {service.title}
                                 </h3>
                                 <p className="text-gray-600 mb-4">{service.desc}</p>
-                                <p className="text-yellow-600 font-semibold">
-                                    Starts from {service.price}
-                                </p>
+                                {/*<p className="text-yellow-600 font-semibold">*/}
+                                {/*    Starts from {service.price}*/}
+                                {/*</p>*/}
+                                <Link to={service.link}><span className="text-orange-600 font-semibold">Learn more →</span></Link>
                             </div>
                         </div>
                     ))}

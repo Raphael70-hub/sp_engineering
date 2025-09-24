@@ -103,8 +103,8 @@ const Services = () => {
     return (
         <>
             <NavBar
-                title="Expert Services for Every Project"
-                subtitle="From consulting to equipment hire, we deliver solutions that work."
+                title="Construction Services in Nigeria | Smart Precision Engineering & Smart Build"
+                subtitle="Explore Smart Precision Engineering’s services: expert construction project management, premium building materials through Smart Build, and Hire Workers dashboards. Serving Nigerians at home and abroad."
                 showButton={false}
             />
 

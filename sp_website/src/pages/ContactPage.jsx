@@ -9,6 +9,7 @@ function ContactPage() {
     const [formData, setFormData] = useState({
         name: "",
         email: "",
+        phone: "",
         message: "",
     });
     const [loading, setLoading] = useState(false);
@@ -39,7 +40,7 @@ function ContactPage() {
 
         sendPromise
             .then(() => {
-                setFormData({ name: "", email: "", message: "" });
+                setFormData({ name: "", email: "", message: "", phone: "" });
             })
             .catch((error) => {
                 console.error(error);
@@ -50,8 +51,8 @@ function ContactPage() {
     return (
         <>
             <NavBar
-                title="Get in Touch"
-                subtitle="We’re here to answer your questions, discuss your project, or provide more information about our services."
+                title="Contact Smart Precision Engineering Limited | Nigeria Construction & Building Materials"
+                subtitle="Reach Smart Precision Engineering Limited for expert construction services, online building materials, and worker hiring. Serving Nigerians across Nigeria and in the diaspora."
                 showButton={false}
             />
 
@@ -89,6 +90,18 @@ function ContactPage() {
                                 />
                             </div>
                             <div>
+                                <label className="block text-sm font-medium">Phone number</label>
+                                <input
+                                    type="text"
+                                    name="phone"
+                                    value={formData.phone}
+                                    onChange={handleChange}
+                                    required
+                                    className="w-full mt-1 p-3 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                                    placeholder="Phone Number"
+                                />
+                            </div>
+                            <div>
                                 <label className="block text-sm font-medium">Message</label>
                                 <textarea
                                     name="message"
@@ -114,9 +127,7 @@ function ContactPage() {
                     <div className="bg-gray-50 p-6 rounded-2xl shadow-lg space-y-6">
                         <h3 className="text-xl font-semibold mb-4">Get in Touch</h3>
                         <p className="text-gray-600">
-                            Have questions about our products or services? Reach out to us
-                            through the details below or fill the form. We’ll get back to you
-                            quickly!
+                            We’d love to hear from you. Whether you’re starting a new project, shopping for materials, or hiring workers, our team is here to help.
                         </p>
 
                         <div className="flex items-center gap-3">
@@ -133,7 +144,7 @@ function ContactPage() {
 
                         <div className="flex items-center gap-3">
                             <Mail className="w-6 h-6 text-orange-600" />
-                            <span className="text-gray-700">info@spengineering.com</span>
+                            <span className="text-gray-700">smartprecisionengineering@gmail.com</span>
                         </div>
                     </div>
                 </div>

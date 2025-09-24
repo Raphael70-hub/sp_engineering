@@ -11,8 +11,8 @@ const Products = () => {
     return (
         <>
             <NavBar
-                title="Browse Our Product Range"
-                subtitle="High-quality materials and tools for every engineering need."
+                title="Buy Building Materials Online in Nigeria | Smart Build Store by Smart Precision"
+                subtitle="Shop quality building materials online in Nigeria with Smart Build. Tiles, roofing sheets, cement, electrical wiring, and imported specials—delivered nationwide."
                 showButton={false}
             />
 

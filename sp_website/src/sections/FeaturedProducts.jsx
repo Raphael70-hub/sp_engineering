@@ -33,14 +33,15 @@ const FeaturedProducts = () => {
 
     return (
         <section className="py-16 bg-white">
-            <div className="max-w-6xl mx-auto px-6 text-center">
+            <div className="max-w-6xl mx-auto px-3">
                 {/* Heading */}
-                <h2 className="text-4xl font-bold text-gray-900 mb-4">
-                    Featured Products
-                </h2>
-                <p className="text-lg text-gray-600 mb-12">
-                    Hand-picked products trusted by professionals
-                </p>
+                <div className="flex items-center justify-between mb-8">
+                    <div>
+                        <h2 className="text-3xl font-bold">Featured Products</h2>
+                        <p className="text-gray-600">Quality tiles, cement, roofing, and electrical materials.</p>
+                    </div>
+                    <a href="/products" className="btn">Shop Now →</a>
+                </div>
 
                 {/* Product Grid */}
                 <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -61,7 +62,11 @@ const FeaturedProducts = () => {
                                 <h3 className="text-xl font-semibold text-gray-800 mb-2">
                                     {product.name}
                                 </h3>
-                                <p className="text-gray-600 text-sm mb-3">{product.description}</p>
+                                <p className="text-gray-600 text-sm mb-3">
+                                    {product.description.length > 50
+                                        ? product.description.slice(0, 50) + '...'
+                                        : product.description}
+                                </p>
 
                                 {/* Price */}
                                 {product.product_type === "rental" ? (

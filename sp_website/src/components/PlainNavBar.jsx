@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {Menu, ShoppingCart, User2, X} from "lucide-react";
-import { NavLink } from "react-router-dom";
+import {Link, NavLink} from "react-router-dom";
 import AccountMenu from "./AccountMenu.jsx";
 import {getCurrentUser} from "../api/index.js";
 import Footer from "../sections/Footer.jsx";
@@ -39,7 +39,10 @@ const PlainNavBar = () => {
         >
             {/* Navbar */}
             <div className="relative flex pt-6 px-10 justify-between items-center text-orange-500">
-                <p className="text-3xl font-bold">Sp Engineering</p>
+                {/*<p className="text-3xl font-bold">Sp Engineering</p>*/}
+                <Link to="/">
+                    <img src="images/mainLogo.png" className="w-16 h-auto" />
+                </Link>
 
                 {/* Desktop Links */}
                 <div className="hidden md:flex space-x-6">

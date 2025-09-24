@@ -1,15 +1,17 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import { navImg } from "../constants/index.js";
 import {Menu, ShoppingCart, User2, X} from "lucide-react";
-import {NavLink} from "react-router-dom";
+import {Link, NavLink} from "react-router-dom";
 import AccountMenu from "../components/AccountMenu.jsx";
 import {getCurrentUser} from "../api/index.js";
 import PlainNavBar from "../components/PlainNavBar.jsx";
 import Footer from "./Footer.jsx";
+import gsap from "gsap";
 
 const NavBar = ({ title, subtitle, showButton = true }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const heroRef = useRef(null);
 
   useEffect(() => {
     const loadUser = async () => {
@@ -21,7 +23,26 @@ const NavBar = ({ title, subtitle, showButton = true }) => {
       }
     };
     loadUser();
-  }, [user]);
+  }, []);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.from(heroRef.current.querySelectorAll(".stagger"), {
+        y: 20,
+        opacity: 0,
+        duration: 0.8,
+        ease: "power3.out",
+        stagger: 0.15,
+      });
+      gsap.from(heroRef.current.querySelector(".hero-ctas"), {
+        y: 10,
+        opacity: 0,
+        duration: 0.9,
+        delay: 0.4,
+      });
+    }, heroRef);
+    return () => ctx.revert();
+  }, []);
 
   // if (!user) {
   //   return (
@@ -36,7 +57,7 @@ const NavBar = ({ title, subtitle, showButton = true }) => {
 
   return (
       <div
-          className="relative bg-cover bg-center h-screen"
+          className="relative bg-cover bg-center md:h-screen sm:min-h-screen pb-3"
           style={{
             backgroundImage: `url(${navImg})`,
           }}
@@ -45,8 +66,11 @@ const NavBar = ({ title, subtitle, showButton = true }) => {
         <div className="absolute inset-0 bg-black/40"></div>
 
         {/* Navbar */}
-        <div className="relative flex pt-10 px-10 justify-between items-center text-white">
-          <p className="text-3xl font-bold">Sp Engineering</p>
+        <div className="relative flex pb-5 pt-10 px-10 justify-between items-center text-white">
+          {/*<p className="text-3xl font-bold">Sp Engineering</p>*/}
+          <Link to="/">
+            <img src="images/favicon.png" className="w-16 h-auto" />
+          </Link>
 
           {/* Desktop Links */}
           <div className="hidden md:flex space-x-6">
@@ -205,14 +229,27 @@ const NavBar = ({ title, subtitle, showButton = true }) => {
         )}
 
         {/* Hero Content */}
-        <div className="relative flex flex-col items-start px-10 justify-center h-full text-left text-white">
-          <h1 className="text-5xl font-bold">{title}</h1>
-          {subtitle && <p className="mt-4 text-lg">{subtitle}</p>}
-          {showButton && (
-              <NavLink to="/products" className="btn mt-6">
-                Shop Now
-              </NavLink>
-          )}
+        <div ref={heroRef}  className="relative flex flex-col items-start px-10 justify-center h-full text-left text-white">
+          <div className="max-w-3xl text-white">
+            <h1 className="text-4xl font-bold">{title}</h1>
+            {subtitle && <p className="stagger mt-4 text-gray-200 text-base md:text-lg">
+              {subtitle}
+            </p>}
+            {showButton && (
+                <div className="hero-ctas mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4">
+                  <NavLink to="/contact" className="btn-light inline-block px-6 py-3 rounded-md text-sm md:text-base">
+                    Start Your Project
+                  </NavLink>
+                  <NavLink to="/products" className="btn-light inline-block px-6 py-3 rounded-md text-sm md:text-base">
+                    Shop Smart Build
+                  </NavLink>
+                  <NavLink to="/hire-workers" className="btn-light inline-block px-6 py-3 rounded-md text-sm md:text-base">
+                    Hire Skilled Workers
+                  </NavLink>
+                </div>
+            )}
+          </div>
+
         </div>
       </div>
   );
