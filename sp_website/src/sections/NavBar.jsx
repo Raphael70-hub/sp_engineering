@@ -243,7 +243,7 @@ const NavBar = ({ title, subtitle, showButton = true }) => {
                   <NavLink to="/products" className="btn-light inline-block px-6 py-3 rounded-md text-sm md:text-base">
                     Shop Smart Build
                   </NavLink>
-                  <NavLink to="/hire-workers" className="btn-light inline-block px-6 py-3 rounded-md text-sm md:text-base">
+                  <NavLink to="/services" className="btn-light inline-block px-6 py-3 rounded-md text-sm md:text-base">
                     Hire Skilled Workers
                   </NavLink>
                 </div>
